@@ -1,0 +1,46 @@
+from typing import TypedDict, Annotated
+
+from langgraph.graph import MessagesState
+
+from app.schema.llm.llm import ChapterDetermineResponseDetail, HeadingDetermineResponseDetail, \
+    SubheadingDetermineResponseDetail, RateLineDetermineResponse, ItemRewriteResponse
+
+
+class HtsClassifyAgentState(MessagesState):
+    # 用户录入商品信息
+    item: str
+    # 当前所处的agent
+    current_agent: str
+    # 下一个agent
+    next_agent: str
+    # 商品重写
+    hit_cache: bool
+    rewrite_llm_response: ItemRewriteResponse
+    rewrite_success: bool
+    rewritten_item: dict[str, str]
+    # 文档检索
+    current_document_type: str
+    chapter_documents: list
+    heading_documents: list
+    subheading_documents: list
+    rate_line_documents: list
+    # 确定章节
+    main_chapter: ChapterDetermineResponseDetail
+    alternative_chapters: list[ChapterDetermineResponseDetail]
+    # 确定类目
+    main_heading: HeadingDetermineResponseDetail
+    alternative_headings: list[HeadingDetermineResponseDetail]
+    # 确定子目
+    main_subheading: SubheadingDetermineResponseDetail
+    alternative_subheadings: list[SubheadingDetermineResponseDetail]
+    # 确定税率线
+    main_rate_line: RateLineDetermineResponse
+    es_search_results: list
+    evaluation: dict
+    final_output: dict
+    unexpected_error: BaseException
+    unexpected_error_message: str
+
+
+def state_has_error(state: HtsClassifyAgentState) -> bool:
+    return state.get("unexpected_error") is not None

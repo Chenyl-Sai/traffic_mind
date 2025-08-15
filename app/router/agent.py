@@ -73,14 +73,18 @@ async def sse_generator(stream):
                     elif node == RewriteItemNodes.ENTER_REWRITE_ITEM:
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在进行商品重写...\n"))
-                    elif node == RewriteItemNodes.REWRITE_ITEM:
+                    elif node == RewriteItemNodes.PROCESS_LLM_RESPONSE or (
+                        node == RewriteItemNodes.GET_REWRITE_ITEM_FROM_CACHE
+                        and
+                        update_data.get("hit_cache")
+                    ):
                         rewrite_success = update_data.get("rewrite_success")
                         if rewrite_success:
                             yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                                 message=f"改写成功，改写结果:{update_data.get("rewritten_item")}\n"))
                         elif rewrite_success != None:
                             yield format_response(SSEMessageTypeEnum.FINAL, SSEResponse(
-                                message=f"改写失败，请输入正确的商品信息\n"))
+                                message=f"请输入正确的商品信息\n"))
             # 文档检索节点
             if sub_graph_name == HtsAgents.RETRIEVE_DOCUMENTS.code:
                 for node, update_data in updates.items():

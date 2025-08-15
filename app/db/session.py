@@ -12,4 +12,10 @@ AsyncSessionLocal = async_sessionmaker(
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as async_session:
-        yield async_session
+        try:
+            yield async_session
+            await async_session.commit()
+        except:
+            await async_session.rollback()
+        finally:
+            await async_session.close()

@@ -28,6 +28,23 @@ def init_indices(app):
     init_evaluate_retrieve_chapter_index()
 
 
+rewritten_item_body = {
+    "properties": {
+        "name": {"type": "text"},
+        "cn_name": {"type": "text"},
+        "en_name": {"type": "text"},
+        "classification_name": {"type": "keyword"},
+        "brand": {"type": "keyword"},
+        "materials": {"type": "text"},
+        "purpose": {"type": "text"},
+        "specifications": {"type": "text"},
+        "processing_state": {"type": "keyword"},
+        "special_properties": {"type": "text"},
+        "other_notes": {"type": "text"},
+    }
+}
+
+
 def init_item_rewrite_index():
     """
     初始化重写商品索引
@@ -68,21 +85,7 @@ def init_item_rewrite_index():
                             "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
                             "space_type": "cosinesimil",
                         },
-                        "rewrite_result": {
-                            "properties": {
-                                "origin_name": {"type": "text"},
-                                "cn_name": {"type": "text"},
-                                "en_name": {"type": "text"},
-                                "classification_name": {"type": "keyword"},
-                                "brand": {"type": "keyword"},
-                                "materials": {"type": "text"},
-                                "purpose": {"type": "text"},
-                                "specifications": {"type": "text"},
-                                "processing_state": {"type": "keyword"},
-                                "special_properties": {"type": "text"},
-                                "other_notes": {"type": "text"},
-                            }
-                        },
+                        "rewritten_item": rewritten_item_body,
                         "user_id": {
                             "type": "keyword"
                         },
@@ -123,21 +126,7 @@ def init_evaluate_retrieve_chapter_index():
                         "origin_item_name": {
                             "type": "keyword",
                         },
-                        "rewrite_item": {
-                            "properties": {
-                                "origin_name": {"type": "text"},
-                                "cn_name": {"type": "text"},
-                                "en_name": {"type": "text"},
-                                "classification_name": {"type": "keyword"},
-                                "brand": {"type": "keyword"},
-                                "materials": {"type": "text"},
-                                "purpose": {"type": "text"},
-                                "specifications": {"type": "text"},
-                                "processing_state": {"type": "keyword"},
-                                "special_properties": {"type": "text"},
-                                "other_notes": {"type": "text"},
-                            }
-                        },
+                        "rewritten_item": rewritten_item_body,
                         "chapter_documents": {
                             "properties": {
                                 "chapter_title": {"type": "text"},
@@ -154,6 +143,7 @@ def init_evaluate_retrieve_chapter_index():
             }
             sync_client.indices.create(index=index_name, body=body)
             logger.info(f"OpenSearch索引{index_name}创建成功")
+
 
 def init_chapter_classify_result_index():
     """
@@ -182,22 +172,8 @@ def init_chapter_classify_result_index():
                         "origin_item_name": {
                             "type": "keyword",
                         },
-                        "rewrite_item": {
-                            "properties": {
-                                "origin_name": {"type": "text"},
-                                "cn_name": {"type": "text"},
-                                "en_name": {"type": "text"},
-                                "classification_name": {"type": "keyword"},
-                                "brand": {"type": "keyword"},
-                                "materials": {"type": "text"},
-                                "purpose": {"type": "text"},
-                                "specifications": {"type": "text"},
-                                "processing_state": {"type": "keyword"},
-                                "special_properties": {"type": "text"},
-                                "other_notes": {"type": "text"},
-                            }
-                        },
-                        "rewrite_item_vector": {
+                        "rewritten_item": rewritten_item_body,
+                        "rewritten_item_vector": {
                             "type": "knn_vector",
                             "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
                             "space_type": "cosinesimil",

@@ -18,8 +18,8 @@ class ItemRewriteResponse(BaseModel):
     商品重写结果
     """
     rewrite_success: bool = Field(title="重写成功与否",
-                                  description="商品重写成功与否, **如果输入的内容中不包含正确的商品信息，则直接返回重写失败，不要返回其他任何字段，包括need_other_messages**")
-    origin_name: str | None = Field(title="商品名称",
+                                  description="商品重写成功与否, **如果输入的内容中不包含正确的商品信息，则直接返回重写失败，不要返回need_other_messages**")
+    name: str | None = Field(title="商品名称",
                              description="核心产品类型，必需项，如果不是字符串自动改写成字符串，如未提取到则重写失败",
                              default=None)
     en_name: str | None = Field(title="商品英文名称",
@@ -40,7 +40,7 @@ class ItemRewriteResponse(BaseModel):
                                            default=None)
     other_notes: str | None = Field(title="其他说明", description="任何其他可能影响分类的有用信息", default=None)
     need_other_messages: list[str] | None = Field(title="需要补充的其他消息字段列表",
-                                                  description="当重写失败时，仅当需要补充除name之外的关键分类信息时，才显示此字段，这里只显示需要补充的信息的字段名称，不要显示说明",
+                                                  description="当重写失败时，仅当需要补充除name之外的关键分类信息时，才显示此字段，这里只显示需要补充的信息的字段名称，字段不超出此schema定义的范围，不要显示说明，这里最多显示2个必填的信息",
                                                   default=None)
 
 

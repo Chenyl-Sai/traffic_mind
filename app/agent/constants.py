@@ -39,8 +39,8 @@ class HtsAgents(Enum):
 class RewriteItemNodes(str, Enum):
     ENTER_REWRITE_ITEM = "enter_rewrite_item"
     GET_REWRITE_ITEM_FROM_CACHE = "get_rewrite_item_from_cache"
-    GET_LLM_REWRITE_ITEM_RESPONSE = "get_llm_rewrite_item_response"
-    REWRITE_ITEM = "rewrite_item"
+    USE_LLM_TO_REWRITE_ITEM = "use_llm_to_rewrite_item"
+    PROCESS_LLM_RESPONSE = "process_llm_response"
     SAVE_EXACT_REWRITE_CACHE = "save_exact_rewrite_cache"
     SAVE_SIMIL_REWRITE_CACHE = "save_simil_rewrite_cache"
 

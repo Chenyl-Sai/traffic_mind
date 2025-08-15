@@ -12,7 +12,7 @@ from langchain_core.prompts import PromptTemplate
 from app.agent.constants import DetermineHeadingNodes
 from app.agent.state import HtsClassifyAgentState
 from app.agent.constants import HtsAgents
-from app.agent.util.exception_handler import safe_node
+from app.agent.util.exception_handler import safe_raise_exception_node
 from app.core.llm import get_qwen_llm_with_capture
 from app.llm.prompt.prompt_template import determine_heading_template
 from app.schema.llm.llm import HeadingDetermineResponse
@@ -23,7 +23,7 @@ def start_determine_heading(state: HtsClassifyAgentState):
     return {"current_agent": HtsAgents.DETERMINE_HEADING.code}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 async def ask_llm_to_determine_heading(state: HtsClassifyAgentState, config, store: BaseStore):
     heading_documents = state.get("heading_documents")
     parser = PydanticOutputParser(pydantic_object=HeadingDetermineResponse)
@@ -42,7 +42,7 @@ async def ask_llm_to_determine_heading(state: HtsClassifyAgentState, config, sto
     return {"messages": [*capture.captured, output]}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 def determine_heading(state: HtsClassifyAgentState, config, store: BaseStore):
     last_message = state["messages"][-1]
     parser = PydanticOutputParser(pydantic_object=HeadingDetermineResponse)

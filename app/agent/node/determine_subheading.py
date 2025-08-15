@@ -12,7 +12,7 @@ from langchain_core.prompts import PromptTemplate
 from app.agent.constants import DetermineSubheadingNodes
 from app.agent.state import HtsClassifyAgentState
 from app.agent.constants import HtsAgents
-from app.agent.util.exception_handler import safe_node
+from app.agent.util.exception_handler import safe_raise_exception_node
 from app.core.llm import get_qwen_llm_with_capture
 from app.llm.prompt.prompt_template import determine_subheading_template
 from app.schema.llm.llm import SubheadingDetermineResponse
@@ -24,7 +24,7 @@ def start_determine_subheading(state: HtsClassifyAgentState):
     return {"current_agent": HtsAgents.DETERMINE_SUBHEADING.code}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 async def ask_llm_to_determine_subheading(state: HtsClassifyAgentState, config, store: BaseStore):
     subheading_documents = state.get("subheading_documents")
     parser = PydanticOutputParser(pydantic_object=SubheadingDetermineResponse)
@@ -43,7 +43,7 @@ async def ask_llm_to_determine_subheading(state: HtsClassifyAgentState, config, 
     return {"messages": [*capture.captured, output]}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 def determine_subheading(state: HtsClassifyAgentState, config, store: BaseStore):
     last_message = state["messages"][-1]
     parser = PydanticOutputParser(pydantic_object=SubheadingDetermineResponse)

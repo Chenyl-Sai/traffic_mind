@@ -13,7 +13,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from app.agent.constants import GenerateFinalOutputNodes
 from app.agent.state import HtsClassifyAgentState
 from app.agent.constants import HtsAgents
-from app.agent.util.exception_handler import safe_node
+from app.agent.util.exception_handler import safe_raise_exception_node
 from app.core.llm import get_qwen_llm_with_capture
 from app.llm.prompt.prompt_template import generate_final_output_template
 from app.schema.llm.llm import GenerateFinalOutputResponse
@@ -24,7 +24,7 @@ def start_generate_final_output(state: HtsClassifyAgentState):
     return {"current_agent": HtsAgents.GENERATE_FINAL_OUTPUT.code}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 async def ask_llm_to_generate_final_output(state: HtsClassifyAgentState, config, store: BaseStore):
     messages = state["messages"]
     parser = PydanticOutputParser(pydantic_object=GenerateFinalOutputResponse)

@@ -12,7 +12,7 @@ from langchain_core.prompts import PromptTemplate
 from app.agent.constants import DetermineRateLineNodes
 from app.agent.state import HtsClassifyAgentState
 from app.agent.constants import HtsAgents
-from app.agent.util.exception_handler import safe_node
+from app.agent.util.exception_handler import safe_raise_exception_node
 from app.core.llm import get_qwen_llm_with_capture
 from app.llm.prompt.prompt_template import determine_rate_line_template
 from app.schema.llm.llm import RateLineDetermineResponse
@@ -24,7 +24,7 @@ def start_determine_rate_line(state: HtsClassifyAgentState):
     return {"current_agent": HtsAgents.DETERMINE_RATE_LINE.code}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 async def ask_llm_to_determine_rate_line(state: HtsClassifyAgentState, config, store: BaseStore):
     rate_line_documents = state.get("rate_line_documents")
     parser = PydanticOutputParser(pydantic_object=RateLineDetermineResponse)
@@ -43,7 +43,7 @@ async def ask_llm_to_determine_rate_line(state: HtsClassifyAgentState, config, s
     return {"messages": [*capture.captured, output]}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 def determine_rate_line(state: HtsClassifyAgentState, config, store: BaseStore):
     last_message = state["messages"][-1]
     parser = PydanticOutputParser(pydantic_object=RateLineDetermineResponse)

@@ -3,6 +3,8 @@
 """
 import json, logging
 
+from datetime import datetime, timezone
+
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.store.base import BaseStore
 from langgraph.graph import START, StateGraph
@@ -10,7 +12,7 @@ from langgraph.graph import START, StateGraph
 from app.agent.constants import RetrieveDocumentsNodes
 from app.agent.state import HtsClassifyAgentState, state_has_error
 from app.agent.constants import HtsAgents
-from app.agent.util.exception_handler import safe_node
+from app.agent.util.exception_handler import safe_raise_exception_node
 from app.core.constants import IndexName
 from app.core.opensearch import get_async_client
 from app.dep.llm import get_vector_store
@@ -26,7 +28,7 @@ def start_retrieve_documents(state: HtsClassifyAgentState):
             "current_document_type": state.get("current_document_type")}
 
 
-@safe_node(logger=logger)
+@safe_raise_exception_node(logger=logger)
 async def retrieve_documents(state: HtsClassifyAgentState, config, store: BaseStore):
     vectorstore = get_vector_store()
     if state.get("current_document_type") == "chapter":
@@ -84,8 +86,9 @@ async def save_retrieve_result_for_evaluation(state: HtsClassifyAgentState, conf
                 document = {
                     "evaluate_version": evaluate_version,
                     "origin_item_name": state.get("item"),
-                    "rewrite_item": state.get("rewritten_item"),
+                    "rewritten_item": state.get("rewritten_item"),
                     "chapter_documents": state.get("chapter_documents"),
+                    "created_at": datetime.now(timezone.utc),
                 }
                 async with get_async_client() as async_client:
                     await async_client.index(index=IndexName.EVALUATE_RETRIEVE_CHAPTER, body=document)

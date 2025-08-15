@@ -14,7 +14,7 @@ from app.agent.util.exception_handler import safe_raise_exception_node
 from app.core.llm import base_qwen_llm
 from app.llm.embedding.qwen import default_qwen_embeddings
 from app.agent.constants import HtsAgents, RewriteItemNodes
-from app.service.item_rewrite_service import ItemRewriteCacheService
+from app.service.rewrite_item_service import ItemRewriteCacheService
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +32,12 @@ async def get_from_cache_node(state: HtsClassifyAgentState):
     """
     item = state.get("item")
     cache = await item_rewrite_cache_service.get_from_cache(item)
-    if cache and cache.get("hit_cache", False):
+    if cache and cache.get("hit_rewrite_cache", False):
         if cache.get("is_real_item", False):
-            return {"hit_cache": True, "rewrite_success": True, "rewritten_item": cache.get("rewritten_item")}
+            return {"hit_rewrite_cache": True, "rewrite_success": True, "rewritten_item": cache.get("rewritten_item")}
         else:
-            return {"hit_cache": True, "rewrite_success": False}
-    return {"hit_cache": False}
+            return {"hit_rewrite_cache": True, "rewrite_success": False}
+    return {"hit_rewrite_cache": False}
 
 
 @safe_raise_exception_node(logger=logger)
@@ -99,8 +99,8 @@ async def save_simil_rewrite_cache_node(state: HtsClassifyAgentState, config):
 
 
 def after_query_cache_edge(state: HtsClassifyAgentState):
-    hit_cache = state.get("hit_cache")
-    if hit_cache:
+    hit_rewrite_cache = state.get("hit_rewrite_cache")
+    if hit_rewrite_cache:
         return [END]
     else:
         return [RewriteItemNodes.USE_LLM_TO_REWRITE_ITEM.value]

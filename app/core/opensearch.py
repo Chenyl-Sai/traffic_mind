@@ -26,6 +26,7 @@ def get_sync_client() -> OpenSearch:
 def init_indices(app):
     init_item_rewrite_index()
     init_evaluate_retrieve_chapter_index()
+    init_chapter_classify_result_index()
 
 
 rewritten_item_body = {
@@ -155,16 +156,19 @@ def init_chapter_classify_result_index():
             logger.info(f"OpenSearch索引{index_name}已存在")
         else:
             chapter = {
-                "chapter_code": {"type": "keyword"},
-                "chapter_title": {"type": "text"},
-                "reason": {"type": "text"},
-                "confidence_score": {"type": "text"},
+                "properties": {
+                    "chapter_code": {"type": "keyword"},
+                    "chapter_title": {"type": "text"},
+                    "reason": {"type": "text"},
+                    "confidence_score": {"type": "text"},
+                }
             }
             body = {
                 "settings": {
                     "index": {
                         "number_of_shards": 1,
                         "number_of_replicas": 1,
+                        "knn": True
                     }
                 },
                 "mappings": {
@@ -180,7 +184,9 @@ def init_chapter_classify_result_index():
                         },
                         "main_chapter": chapter,
                         "alternative_chapters": chapter,
-                        "reason": {"type": "text"},
+                        "created_at": {
+                            "type": "date"
+                        }
                     }
                 }
             }

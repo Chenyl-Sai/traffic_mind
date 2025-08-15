@@ -65,4 +65,6 @@ class Settings(BaseSettings):
     OPEN_SEARCH_USERNAME: str
     OPEN_SEARCH_PASSWORD: str
 
+    REDIS_CONNECTION_URL: str
+
 settings = Settings()

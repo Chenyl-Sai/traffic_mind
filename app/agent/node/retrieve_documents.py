@@ -3,8 +3,6 @@
 """
 import json, logging
 
-from datetime import datetime, timezone
-
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.store.base import BaseStore
 from langgraph.graph import START, StateGraph
@@ -13,14 +11,15 @@ from app.agent.constants import RetrieveDocumentsNodes
 from app.agent.state import HtsClassifyAgentState, state_has_error
 from app.agent.constants import HtsAgents
 from app.agent.util.exception_handler import safe_raise_exception_node
-from app.core.constants import IndexName
-from app.core.opensearch import get_async_client
-from app.dep.llm import get_vector_store
+from app.dep.llm import get_chapter_vector_store
 from app.service.hts_service import get_rate_lines_by_wco_subheadings
+from app.service.retrieve_documents_service import RetrieveDocumentsService
 from app.service.wco_hs_service import get_heading_detail_by_chapter_codes, get_subheading_detail_by_heading_codes, \
     get_subheading_dict_by_subheading_codes
 
 logger = logging.getLogger(__name__)
+
+retrieve_service = RetrieveDocumentsService(chapter_vectorstore=get_chapter_vector_store())
 
 
 def start_retrieve_documents(state: HtsClassifyAgentState):
@@ -30,16 +29,9 @@ def start_retrieve_documents(state: HtsClassifyAgentState):
 
 @safe_raise_exception_node(logger=logger)
 async def retrieve_documents(state: HtsClassifyAgentState, config, store: BaseStore):
-    vectorstore = get_vector_store()
     if state.get("current_document_type") == "chapter":
-        chapter_documents = vectorstore.search(query_text=state.get("item"),
-                                               search_type="similarity",
-                                               filter={"type": "chapter"},
-                                               k=10)
-        if chapter_documents:
-            return {"chapter_documents": [document.page_content for document in chapter_documents]}
-        else:
-            return {"chapter_documents": []}
+        chapter_documents = await retrieve_service.retrieve_chapter_documents(state.get("rewritten_item"))
+        return {"chapter_documents": chapter_documents}
     elif state.get("current_document_type") == "heading":
         # 从数据库获取chapter下heading信息
         chapter_codes = [state.get("main_chapter").chapter_code]
@@ -73,27 +65,24 @@ async def retrieve_documents(state: HtsClassifyAgentState, config, store: BaseSt
         return {"rate_line_documents": json.dumps(sub_heading_tree, ensure_ascii=False)}
 
 
-async def save_retrieve_result_for_evaluation(state: HtsClassifyAgentState, config, store: BaseStore):
-    try:
-        is_for_evaluation = config["configurable"].get("is_for_evaluation", False)
-        evaluate_version = config["configurable"].get("evaluate_version", "-1")
-        if is_for_evaluation:
-            # 有异常直接返回
-            if state_has_error(state):
-                return {}
-            if state.get("current_document_type") == "chapter":
-                # 保存一下获取的chapter信息用于评估准确性
-                document = {
-                    "evaluate_version": evaluate_version,
-                    "origin_item_name": state.get("item"),
-                    "rewritten_item": state.get("rewritten_item"),
-                    "chapter_documents": state.get("chapter_documents"),
-                    "created_at": datetime.now(timezone.utc),
-                }
-                async with get_async_client() as async_client:
-                    await async_client.index(index=IndexName.EVALUATE_RETRIEVE_CHAPTER, body=document)
-    except Exception as e:
-        logger.exception("Save retrieve chapter result failed", exc_info=e)
+@safe_raise_exception_node(logger=logger, ignore_exception=True)
+async def save_retrieve_result_for_evaluation(state: HtsClassifyAgentState, config):
+    # 有异常直接返回
+    if state_has_error(state):
+        return {}
+    is_for_evaluation = config["configurable"].get("is_for_evaluation", False)
+    evaluate_version = config["configurable"].get("evaluate_version", "-1")
+    # 只有评估请求才记录
+    if is_for_evaluation:
+        if state.get("current_document_type") == "chapter":
+            documents = state.get("chapter_documents")
+            documents_dict_list = [json.loads(document) for document in documents]
+            await retrieve_service.save_chapter_retrieve_evaluation(
+                evaluate_version,
+                origin_item_name=state.get("item"),
+                rewritten_item=state.get("rewritten_item"),
+                chapter_documents=documents_dict_list
+            )
     return {}
 
 

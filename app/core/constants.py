@@ -8,3 +8,7 @@ class IndexName(str, Enum):
 
     EVALUATE_RETRIEVE_CHAPTER = "evaluate_traffic_mind_retrieve_chapter"
     EVALUATE_LLM_CONFIRM_CHAPTER = "evaluate_traffic_mind_llm_confirm_chapter"
+
+
+class RedisKeyPrefix(str, Enum):
+    REWRITTEN_ITEM_EMBEDDINGS = "rewritten_item_embeddings"

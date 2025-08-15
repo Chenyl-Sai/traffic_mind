@@ -76,15 +76,15 @@ async def sse_generator(stream):
                     elif node == RewriteItemNodes.PROCESS_LLM_RESPONSE or (
                         node == RewriteItemNodes.GET_REWRITE_ITEM_FROM_CACHE
                         and
-                        update_data.get("hit_cache")
+                        update_data.get("hit_rewrite_cache")
                     ):
                         rewrite_success = update_data.get("rewrite_success")
                         if rewrite_success:
                             yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                                 message=f"改写成功，改写结果:{update_data.get("rewritten_item")}\n"))
-                        elif rewrite_success != None:
-                            yield format_response(SSEMessageTypeEnum.FINAL, SSEResponse(
-                                message=f"请输入正确的商品信息\n"))
+                        # elif rewrite_success != None:
+                        #     yield format_response(SSEMessageTypeEnum.FINAL, SSEResponse(
+                        #         message=f"请输入正确的商品信息\n"))
             # 文档检索节点
             if sub_graph_name == HtsAgents.RETRIEVE_DOCUMENTS.code:
                 for node, update_data in updates.items():
@@ -104,7 +104,7 @@ async def sse_generator(stream):
                     elif node == DetermineChapterNodes.ENTER_DETERMINE_CHAPTER:
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在确定章节信息...\n"))
-                    elif node == DetermineChapterNodes.DETERMINE_CHAPTER:
+                    elif node == DetermineChapterNodes.PROCESS_LLM_RESPONSE:
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                             message=f"最高置信度章节如下:\n"))
                         main_chapter = update_data.get("main_chapter")

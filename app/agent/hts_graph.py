@@ -27,13 +27,12 @@ def agent_router(state: HtsClassifyAgentState):
 
     # 从重写完成返回，判断下一步走向
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.REWRITE_ITEM.code:
-        return Command(update={"next_agent": END, "final_output": "Temp End"}, goto=END)
-        # # 重写完成之后，查看状态数据决定走向
-        # if state.get("rewrite_success"):
-        #     return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS.code, "current_document_type": "chapter"},
-        #                    goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
-        # else:
-        #     return Command(update={"next_agent": END, "final_output": "请输入正确商品信息"}, goto=END)
+        # 重写完成之后，查看状态数据决定走向
+        if state.get("rewrite_success"):
+            return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS.code, "current_document_type": "chapter"},
+                           goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
+        else:
+            return Command(update={"next_agent": END, "final_output": "请输入正确商品信息"}, goto=END)
 
     # 从文档检索返回，判断下一步走向
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.RETRIEVE_DOCUMENTS.code:
@@ -49,8 +48,9 @@ def agent_router(state: HtsClassifyAgentState):
                            goto=HtsAgents.DETERMINE_RATE_LINE.code)
     # LLM返回了可能的chapter列表，下一步获取chapter下heading的资料
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_CHAPTER.code:
-        return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "heading"},
-                       goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
+        return Command(update={"next_agent": END, "final_output": "Temp End"}, goto=END)
+        # return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "heading"},
+        #                goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_HEADING.code:
         return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "subheading"},
                        goto=HtsAgents.RETRIEVE_DOCUMENTS.code)

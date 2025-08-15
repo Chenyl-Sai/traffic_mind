@@ -4,17 +4,19 @@ from app.agent.hts_graph import build_hts_classify_graph
 from app.core.config import settings
 from app.core.handlers import init_exception_handlers
 from app.core.opensearch import init_indices
+from app.core.redis import init_async_redis, close_async_redis
 from app.db.session import get_async_session
 from app.core.middleware import init_middleware
 from app.dep.db import init_db
 from contextlib import asynccontextmanager
 
-from app.dep.llm import get_vector_store
+from app.dep.llm import get_chapter_vector_store
 from app.init.embeddings_init import build_vector_store
 from app.router.agent import agent_router
 from app.router.schedule import schedule_router
 from app.router.vectorstore import vector_store_router
 from app.router.hts import hts_router
+from app.router.evaluation import evaluation_router
 import logging
 from app.core import logging_config
 
@@ -27,13 +29,20 @@ async def lifespan(app: FastAPI):
     async with await anext(get_async_session()) as session:
         await init_db(session)
         await session.close()
-        await build_vector_store(session, get_vector_store())
+        await build_vector_store(session, get_chapter_vector_store())
 
     # 初始化opensearch索引
     init_indices(app)
 
+    # 初始化redis连接
+    await init_async_redis()
+
     app.state.hts_graph = await build_hts_classify_graph()
     yield
+
+    # 关闭redis连接
+    await close_async_redis()
+
     logger.info("lifespan end")
 
 app = FastAPI(lifespan=lifespan)
@@ -49,3 +58,4 @@ app.include_router(schedule_router, prefix="/schedule", tags=["schedule"])
 app.include_router(vector_store_router, prefix="/vector-store", tags=["vector-store"])
 app.include_router(agent_router, prefix="/agent", tags=["agent"])
 app.include_router(hts_router, prefix="/hts", tags=["hts"])
+app.include_router(evaluation_router, prefix="/evaluation", tags=["evaluation"])

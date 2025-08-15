@@ -51,8 +51,11 @@ class RetrieveDocumentsNodes(str, Enum):
 
 class DetermineChapterNodes(str, Enum):
     ENTER_DETERMINE_CHAPTER = "enter_determine_chapter"
-    ASK_LLM_TO_DETERMINE_CHAPTER = "ask_llm_to_determine_chapter"
-    DETERMINE_CHAPTER = "determine_chapter"
+    GET_CHAPTER_FROM_CACHE = "get_chapter_from_cache"
+    USE_LLM_TO_DETERMINE_CHAPTER = "use_llm_to_determine_chapter"
+    PROCESS_LLM_RESPONSE = "process_llm_response"
+    SAVE_EXACT_CHAPTER_CACHE = "save_exact_chapter_cache"
+    SAVE_SIMIL_CHAPTER_CACHE = "save_simil_chapter_cache"
 
 class DetermineHeadingNodes(str, Enum):
     ENTER_DETERMINE_HEADING = "enter_determine_heading"

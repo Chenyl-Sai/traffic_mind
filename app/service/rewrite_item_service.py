@@ -1,6 +1,6 @@
 from langchain_core.language_models import BaseChatModel
 
-from app.db.session import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal, get_async_session
 from app.model.hts_classify_cache_model import ItemRewriteCache
 from app.repo.hts_classify_cache_repo import insert_item_rewrite_cache, select_item_rewrite_cache
 from app.core.opensearch import get_async_client
@@ -30,7 +30,7 @@ class ItemRewriteCacheService:
             cache = await select_item_rewrite_cache(session, item)
             if cache:
                 return {
-                    "hit_cache": True,
+                    "hit_rewrite_cache": True,
                     "is_real_item": cache.is_real_item,
                     "rewritten_item": cache.rewritten_item
                 }
@@ -55,7 +55,7 @@ class ItemRewriteCacheService:
                 # 相似度得分达到指定阈值的，直接返回结果，否则流程继续向下流转
                 if score > 0.95:
                     return {
-                        "hit_cache": True,
+                        "hit_rewrite_cache": True,
                         "is_real_item": True,
                         "rewritten_item": response["hits"]["hits"][0]["_source"]["rewritten_item"]
                     }
@@ -76,7 +76,7 @@ class ItemRewriteCacheService:
                 print(f"English similarity score:{score}")
                 if score > 0.95:
                     return {
-                        "hit_cache": True,
+                        "hit_rewrite_cache": True,
                         "is_real_item": True,
                         "rewritten_item": response["hits"]["hits"][0]["_source"]["rewritten_item"]
                     }

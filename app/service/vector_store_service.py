@@ -35,15 +35,15 @@ class FAISSVectorStore:
         self.index.save_local(self.index_dir, self.index_name)
         print(f"Index saved to {self.index_dir}")
 
-    def add_texts(self, texts, metadatas):
+    async def add_texts(self, texts, metadatas):
         """添加向量到索引"""
-        self.index.add_texts(texts=texts, metadatas=metadatas)
+        await self.index.aadd_texts(texts=texts, metadatas=metadatas)
 
-    def search(self, query_text, filter, search_type="similarity", k=5):
+    async def search(self, query_text, filter, search_type="similarity", k=5):
         """搜索相似向量"""
         if search_type == "similarity":
-            return self.index.similarity_search(query=query_text, k=k, filter=filter)
+            return await self.index.asimilarity_search(query=query_text, k=k, filter=filter)
         elif search_type == "mmr":
-            return self.index.max_marginal_relevance_search(query=query_text, k=k, filter=filter)
+            return await self.index.amax_marginal_relevance_search(query=query_text, k=k, filter=filter)
         else:
             raise ValueError(f"Invalid search type: {search_type}")

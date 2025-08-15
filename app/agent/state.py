@@ -3,7 +3,7 @@ from typing import TypedDict, Annotated
 from langgraph.graph import MessagesState
 
 from app.schema.llm.llm import ChapterDetermineResponseDetail, HeadingDetermineResponseDetail, \
-    SubheadingDetermineResponseDetail, RateLineDetermineResponse, ItemRewriteResponse
+    SubheadingDetermineResponseDetail, RateLineDetermineResponse, ItemRewriteResponse, ChapterDetermineResponse
 
 
 class HtsClassifyAgentState(MessagesState):
@@ -14,17 +14,21 @@ class HtsClassifyAgentState(MessagesState):
     # 下一个agent
     next_agent: str
     # 商品重写
-    hit_cache: bool
+    hit_rewrite_cache: bool
     rewrite_llm_response: ItemRewriteResponse
     rewrite_success: bool
     rewritten_item: dict[str, str]
     # 文档检索
     current_document_type: str
-    chapter_documents: list
+    chapter_documents: list[str]
     heading_documents: list
     subheading_documents: list
     rate_line_documents: list
     # 确定章节
+    hit_chapter_cache: bool
+    determine_chapter_llm_response: ChapterDetermineResponse
+    determine_chapter_success: bool
+    determine_chapter_fail_reason: str
     main_chapter: ChapterDetermineResponseDetail
     alternative_chapters: list[ChapterDetermineResponseDetail]
     # 确定类目

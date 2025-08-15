@@ -34,8 +34,8 @@ async def build_vector_store(session: AsyncSession, vector_store: FAISSVectorSto
             text = json.dumps(extends_dict)
             logger.info("Expend of chapter: %s", json.dumps(extends_dict, indent=4))
             section = await chapter.awaitable_attrs.section
-            vector_store.add_texts([text], [{"type": "chapter",
-                                         "code": chapter.chapter_code,
-                                         "section": section.section_code}])
+            await vector_store.add_texts([text], [{"type": "chapter",
+                                                   "code": chapter.chapter_code,
+                                                   "section": section.section_code}])
     finally:
         vector_store.save_index()

@@ -48,12 +48,12 @@ def agent_router(state: HtsClassifyAgentState):
                            goto=HtsAgents.DETERMINE_RATE_LINE.code)
     # LLM返回了可能的chapter列表，下一步获取chapter下heading的资料
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_CHAPTER.code:
-        return Command(update={"next_agent": END, "final_output": "Temp End"}, goto=END)
-        # return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "heading"},
-        #                goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
-    if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_HEADING.code:
-        return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "subheading"},
+        return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "heading"},
                        goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
+    if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_HEADING.code:
+        return Command(update={"next_agent": END, "final_output": "Temp End"}, goto=END)
+        # return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "subheading"},
+        #                goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_SUBHEADING.code:
         return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "rate-line"},
                        goto=HtsAgents.RETRIEVE_DOCUMENTS.code)

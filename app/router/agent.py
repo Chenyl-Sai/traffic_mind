@@ -133,7 +133,7 @@ async def sse_generator(stream):
                     elif node == DetermineHeadingNodes.ENTER_DETERMINE_HEADING:
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在确定类目信息...\n"))
-                    elif node == DetermineHeadingNodes.DETERMINE_HEADING:
+                    elif node == DetermineHeadingNodes.PROCESS_LLM_RESPONSE:
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                             message=f"最高置信度类目如下:\n"))
                         main_heading = update_data.get("main_heading")

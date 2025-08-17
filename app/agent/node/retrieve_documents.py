@@ -34,35 +34,25 @@ async def retrieve_documents(state: HtsClassifyAgentState, config, store: BaseSt
         return {"chapter_documents": chapter_documents}
     elif state.get("current_document_type") == "heading":
         # 从数据库获取chapter下heading信息
-        chapter_codes = [state.get("main_chapter").chapter_code]
+        chapter_codes = [state.get("main_chapter").get("chapter_code")]
         alternative_chapters = state.get("alternative_chapters")
         if alternative_chapters:
-            chapter_codes.extend([alternative_chapter.chapter_code for alternative_chapter in alternative_chapters])
-        chapter_detail_dict = await get_heading_detail_by_chapter_codes(chapter_codes)
-        return {"heading_documents": json.dumps(chapter_detail_dict, ensure_ascii=False)}
+            chapter_codes.extend([alternative_chapter.get("chapter_code") for alternative_chapter in alternative_chapters])
+        return {"heading_documents": await retrieve_service.retrieve_heading_documents(chapter_codes)}
     elif state.get("current_document_type") == "subheading":
         # 从数据库获取heading下subheading信息
         heading_codes = [state.get("main_heading").heading_code]
         alternative_headings = state.get("alternative_headings")
         if alternative_headings:
             heading_codes.extend([alternative_heading.heading_code for alternative_heading in alternative_headings])
-        heading_detail_dict = await get_subheading_detail_by_heading_codes(heading_codes)
-        return {"subheading_documents": json.dumps(heading_detail_dict, ensure_ascii=False)}
+        return {"subheading_documents": await retrieve_service.retrieve_subheading_documents(heading_codes)}
     elif state.get("current_document_type") == "rate-line":
         subheading_codes = [state.get("main_subheading").subheading_code]
         alternative_subheadings = state.get("alternative_subheadings")
         if alternative_subheadings:
             subheading_codes.extend(
                 [alternative_subheading.subheading_code for alternative_subheading in alternative_subheadings])
-        sub_heading_tree = await get_subheading_dict_by_subheading_codes(subheading_codes)
-        sub_heading_detail_dict = await get_rate_lines_by_wco_subheadings(subheading_codes)
-        for chapter_key, chapter_details in sub_heading_tree.items():
-            for heading_key, heading_details in chapter_details.items():
-                for subheading_key, _ in heading_details.items():
-                    sub_heading_code = subheading_key.split(":")[0]
-                    subheading_details = sub_heading_detail_dict.get(sub_heading_code)
-                    heading_details.update({subheading_key: subheading_details})
-        return {"rate_line_documents": json.dumps(sub_heading_tree, ensure_ascii=False)}
+        return {"rate_line_documents": await retrieve_service.retrieve_rate_line_documents(subheading_codes)}
 
 
 @safe_raise_exception_node(logger=logger, ignore_exception=True)

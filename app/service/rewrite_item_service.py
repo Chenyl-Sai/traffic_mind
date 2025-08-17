@@ -1,17 +1,22 @@
 from langchain_core.language_models import BaseChatModel
 
-from app.db.session import AsyncSessionLocal, get_async_session
+from app.db.session import AsyncSessionLocal
 from app.model.hts_classify_cache_model import ItemRewriteCache
 from app.repo.hts_classify_cache_repo import insert_item_rewrite_cache, select_item_rewrite_cache
 from app.core.opensearch import get_async_client
-from app.core.constants import IndexName
+from app.core.constants import IndexName, RedisKeyPrefix
 from app.schema.llm.llm import ItemRewriteResponse
 from app.llm.prompt.prompt_template import rewrite_item_template
+from app.util.hash_utils import md5_hash
+from app.core.redis import get_async_redis
 
 from datetime import datetime, timezone
+from collections import OrderedDict
 from langchain.embeddings.base import Embeddings
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
+
+import json
 
 
 class ItemRewriteCacheService:
@@ -132,3 +137,28 @@ class ItemRewriteCacheService:
         output = await self.llm.ainvoke(input=[human_message])
 
         return human_message, output, parser.parse(output.content)
+
+
+
+class RewriteItemEmbeddingsService:
+
+    def __init__(self, embeddings: Embeddings):
+        self.embeddings = embeddings
+
+    async def get_rewritten_item_embeddings(self, rewritten_item: dict) -> list[float]:
+        """
+        获取改写商品的embeddings，优先使用redis缓存，如果没有走接口获取，然后缓存到redis中
+        """
+        rewritten_item_vector = None
+        ordered_rewritten_item = OrderedDict(sorted(rewritten_item.items()))
+        rewritten_item_json = json.dumps(ordered_rewritten_item)
+        redis_hash_key = f"{RedisKeyPrefix.REWRITTEN_ITEM_EMBEDDINGS.value}:{md5_hash(rewritten_item_json)}"
+        async_redis = await get_async_redis()
+        vector_json = await async_redis.get(redis_hash_key)
+        if vector_json:
+            rewritten_item_vector = json.loads(vector_json)
+        if rewritten_item_vector is None:
+            rewritten_item_vector = await self.embeddings.aembed_query(rewritten_item_json)
+            # 将llm返回的embedding缓存到redis
+            await async_redis.set(redis_hash_key, json.dumps(rewritten_item_vector))
+        return rewritten_item_vector

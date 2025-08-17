@@ -25,8 +25,10 @@ def get_sync_client() -> OpenSearch:
 
 def init_indices(app):
     init_item_rewrite_index()
-    init_evaluate_retrieve_chapter_index()
     init_chapter_classify_result_index()
+    init_heading_classify_result_index()
+
+    init_for_evaluation()
 
 
 rewritten_item_body = {
@@ -53,7 +55,7 @@ def init_item_rewrite_index():
     index_name = IndexName.ITEM_REWRITE.value
     with get_sync_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
-            logger.info(f"OpenSearch索引{index_name}已存在")
+            logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
             body = {
                 "settings": {
@@ -100,7 +102,112 @@ def init_item_rewrite_index():
                 }
             }
             sync_client.indices.create(index=index_name, body=body)
-            logger.info(f"OpenSearch索引{index_name}创建成功")
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+def init_chapter_classify_result_index():
+    """
+    初始化商品章节分类结果索引
+    """
+    index_name = IndexName.CHAPTER_CLASSIFY.value
+    with get_sync_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            chapter = {
+                "properties": {
+                    "chapter_code": {"type": "keyword"},
+                    "chapter_title": {"type": "text"},
+                    "reason": {"type": "text"},
+                    "confidence_score": {"type": "text"},
+                }
+            }
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                        "knn": True
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "rewritten_item": rewritten_item_body,
+                        "rewritten_item_vector": {
+                            "type": "knn_vector",
+                            "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
+                            "space_type": "cosinesimil",
+                        },
+                        "rag_chapter_codes": {"type": "keyword"},
+                        "main_chapter": chapter,
+                        "alternative_chapters": chapter,
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+def init_heading_classify_result_index():
+    """
+    初始化商品heading分类结果索引
+    """
+    index_name = IndexName.HEADING_CLASSIFY.value
+    with get_sync_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            heading = {
+                "properties": {
+                    "heading_code": {"type": "keyword"},
+                    "heading_title": {"type": "text"},
+                    "reason": {"type": "text"},
+                    "confidence_score": {"type": "text"},
+                }
+            }
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                        "knn": True
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "rewritten_item": rewritten_item_body,
+                        "rewritten_item_vector": {
+                            "type": "knn_vector",
+                            "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
+                            "space_type": "cosinesimil",
+                        },
+                        "chapter_codes": {"type": "keyword"},
+                        "main_heading": heading,
+                        "alternative_headings": heading,
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+
+def init_for_evaluation():
+    init_evaluate_retrieve_chapter_index()
+    init_evaluate_llm_confirm_chapter_index()
+    init_evaluate_llm_confirm_heading_index()
 
 
 def init_evaluate_retrieve_chapter_index():
@@ -110,7 +217,7 @@ def init_evaluate_retrieve_chapter_index():
     index_name = IndexName.EVALUATE_RETRIEVE_CHAPTER.value
     with get_sync_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
-            logger.info(f"OpenSearch索引{index_name}已存在")
+            logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
             body = {
                 "settings": {
@@ -143,24 +250,24 @@ def init_evaluate_retrieve_chapter_index():
                 }
             }
             sync_client.indices.create(index=index_name, body=body)
-            logger.info(f"OpenSearch索引{index_name}创建成功")
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
 
 
-def init_chapter_classify_result_index():
+def init_evaluate_llm_confirm_chapter_index():
     """
-    初始化商品章节分类结果索引
+    初始化用于评估LLM决策章节是否准确的索引
     """
-    index_name = IndexName.CHAPTER_CLASSIFY.value
+    index_name = IndexName.EVALUATE_LLM_CONFIRM_CHAPTER.value
     with get_sync_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
-            logger.info(f"OpenSearch索引{index_name}已存在")
+            logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
-            chapter = {
+            chapter_detail = {
                 "properties": {
                     "chapter_code": {"type": "keyword"},
                     "chapter_title": {"type": "text"},
                     "reason": {"type": "text"},
-                    "confidence_score": {"type": "text"},
+                    "confidence_score": {"type": "float"},
                 }
             }
             body = {
@@ -168,22 +275,25 @@ def init_chapter_classify_result_index():
                     "index": {
                         "number_of_shards": 1,
                         "number_of_replicas": 1,
-                        "knn": True
                     }
                 },
                 "mappings": {
                     "properties": {
+                        "evaluate_version": {
+                            "type": "keyword",
+                        },
                         "origin_item_name": {
                             "type": "keyword",
                         },
                         "rewritten_item": rewritten_item_body,
-                        "rewritten_item_vector": {
-                            "type": "knn_vector",
-                            "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
-                            "space_type": "cosinesimil",
+                        "retrieved_chapter_codes": {"type": "text"},
+                        "llm_response": {
+                            "properties": {
+                                "main_chapter": chapter_detail,
+                                "alternative_chapters": chapter_detail,
+                                "reason": {"type": "text"},
+                            }
                         },
-                        "main_chapter": chapter,
-                        "alternative_chapters": chapter,
                         "created_at": {
                             "type": "date"
                         }
@@ -191,4 +301,56 @@ def init_chapter_classify_result_index():
                 }
             }
             sync_client.indices.create(index=index_name, body=body)
-            logger.info(f"OpenSearch索引{index_name}创建成功")
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+def init_evaluate_llm_confirm_heading_index():
+    """
+    初始化用于评估LLM决策类目是否准确的索引
+    """
+    index_name = IndexName.EVALUATE_LLM_CONFIRM_HEADING.value
+    with get_sync_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            heading_detail = {
+                "properties": {
+                    "heading_code": {"type": "keyword"},
+                    "heading_title": {"type": "text"},
+                    "reason": {"type": "text"},
+                    "confidence_score": {"type": "float"},
+                }
+            }
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "evaluate_version": {
+                            "type": "keyword",
+                        },
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "heading_documents": {
+                            "type": "text"
+                        },
+                        "llm_response": {
+                            "properties": {
+                                "main_heading": heading_detail,
+                                "alternative_headings": heading_detail,
+                                "reason": {"type": "text"},
+                            }
+                        },
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")

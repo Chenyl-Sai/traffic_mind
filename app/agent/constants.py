@@ -54,13 +54,17 @@ class DetermineChapterNodes(str, Enum):
     GET_CHAPTER_FROM_CACHE = "get_chapter_from_cache"
     USE_LLM_TO_DETERMINE_CHAPTER = "use_llm_to_determine_chapter"
     PROCESS_LLM_RESPONSE = "process_llm_response"
+    SAVE_LLM_RESPONSE_FOR_EVALUATION = "save_llm_response_for_evaluation"
     SAVE_EXACT_CHAPTER_CACHE = "save_exact_chapter_cache"
     SAVE_SIMIL_CHAPTER_CACHE = "save_simil_chapter_cache"
 
 class DetermineHeadingNodes(str, Enum):
     ENTER_DETERMINE_HEADING = "enter_determine_heading"
+    GET_HEADING_FROM_CACHE = "get_heading_from_cache"
     ASK_LLM_TO_DETERMINE_HEADING = "ask_llm_to_determine_heading"
-    DETERMINE_HEADING = "determine_heading"
+    PROCESS_LLM_RESPONSE = "process_llm_response"
+    SAVE_LLM_RESPONSE_FOR_EVALUATION = "save_llm_response_for_evaluation"
+    SAVE_LAYERED_HEADING_CACHE = "save_layered_heading_cache"
 
 class DetermineSubheadingNodes(str, Enum):
     ENTER_DETERMINE_SUBHEADING = "enter_determine_subheading"

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 async def build_vector_store(session: AsyncSession, vector_store: FAISSVectorStore):
+    changed: bool = False
     try:
         chapters = await get_current_version_chapters(session)
         # 从LLM将chapter信息补充完整
@@ -24,7 +25,7 @@ async def build_vector_store(session: AsyncSession, vector_store: FAISSVectorSto
                 if doc.metadata.get("type") == "chapter" and doc.metadata.get("code") == chapter.chapter_code
             ]
             if filtered_docs:
-                logger.info("Skip init exist expend of chapter: %s", chapter.chapter_code)
+                logger.debug("Skip init exist expend of chapter: %s", chapter.chapter_code)
                 continue
 
             logger.info("Start init expend of chapter: %s", chapter.chapter_code)
@@ -37,5 +38,7 @@ async def build_vector_store(session: AsyncSession, vector_store: FAISSVectorSto
             await vector_store.add_texts([text], [{"type": "chapter",
                                                    "code": chapter.chapter_code,
                                                    "section": section.section_code}])
+            changed = True
     finally:
-        vector_store.save_index()
+        if changed:
+            vector_store.save_index()

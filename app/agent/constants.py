@@ -68,8 +68,11 @@ class DetermineHeadingNodes(str, Enum):
 
 class DetermineSubheadingNodes(str, Enum):
     ENTER_DETERMINE_SUBHEADING = "enter_determine_subheading"
+    GET_SUBHEADING_FROM_CACHE = "get_subheading_from_cache"
     ASK_LLM_TO_DETERMINE_SUBHEADING = "ask_llm_to_determine_subheading"
-    DETERMINE_SUBHEADING = "determine_subheading"
+    PROCESS_LLM_RESPONSE = "process_llm_response"
+    SAVE_LLM_RESPONSE_FOR_EVALUATION = "save_llm_response_for_evaluation"
+    SAVE_LAYERED_SUBHEADING_CACHE = "save_layered_subheading_cache"
 
 class DetermineRateLineNodes(str, Enum):
     ENTER_DETERMINE_RATE_LINE = "enter_determine_rate_line"

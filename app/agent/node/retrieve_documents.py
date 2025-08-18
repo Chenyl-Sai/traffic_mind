@@ -41,17 +41,17 @@ async def retrieve_documents(state: HtsClassifyAgentState, config, store: BaseSt
         return {"heading_documents": await retrieve_service.retrieve_heading_documents(chapter_codes)}
     elif state.get("current_document_type") == "subheading":
         # 从数据库获取heading下subheading信息
-        heading_codes = [state.get("main_heading").heading_code]
+        heading_codes = [state.get("main_heading").get("heading_code")]
         alternative_headings = state.get("alternative_headings")
         if alternative_headings:
-            heading_codes.extend([alternative_heading.heading_code for alternative_heading in alternative_headings])
+            heading_codes.extend([alternative_heading.get("heading_code") for alternative_heading in alternative_headings])
         return {"subheading_documents": await retrieve_service.retrieve_subheading_documents(heading_codes)}
     elif state.get("current_document_type") == "rate-line":
-        subheading_codes = [state.get("main_subheading").subheading_code]
+        subheading_codes = [state.get("main_subheading").get("subheading_code")]
         alternative_subheadings = state.get("alternative_subheadings")
         if alternative_subheadings:
             subheading_codes.extend(
-                [alternative_subheading.subheading_code for alternative_subheading in alternative_subheadings])
+                [alternative_subheading.get("subheading_code") for alternative_subheading in alternative_subheadings])
         return {"rate_line_documents": await retrieve_service.retrieve_rate_line_documents(subheading_codes)}
 
 

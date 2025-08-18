@@ -51,12 +51,12 @@ def agent_router(state: HtsClassifyAgentState):
         return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "heading"},
                        goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_HEADING.code:
-        return Command(update={"next_agent": END, "final_output": "Temp End"}, goto=END)
-        # return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "subheading"},
-        #                goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
-    if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_SUBHEADING.code:
-        return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "rate-line"},
+        return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "subheading"},
                        goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
+    if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_SUBHEADING.code:
+        return Command(update={"next_agent": END, "final_output": "Temp End"}, goto=END)
+        # return Command(update={"next_agent": HtsAgents.RETRIEVE_DOCUMENTS, "current_document_type": "rate-line"},
+        #                goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_RATE_LINE.code:
         return Command(update={"next_agent": HtsAgents.GENERATE_FINAL_OUTPUT},
                        goto=HtsAgents.GENERATE_FINAL_OUTPUT.code)

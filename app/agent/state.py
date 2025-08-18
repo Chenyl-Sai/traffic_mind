@@ -2,7 +2,7 @@ from typing import TypedDict, Annotated
 
 from langgraph.graph import MessagesState
 
-from app.schema.llm.llm import ChapterDetermineResponseDetail, HeadingDetermineResponseDetail, \
+from app.schema.llm.llm import SubheadingDetermineResponse, HeadingDetermineResponseDetail, \
     HeadingDetermineResponse, SubheadingDetermineResponseDetail, RateLineDetermineResponse, ItemRewriteResponse, \
     ChapterDetermineResponse
 
@@ -36,11 +36,15 @@ class HtsClassifyAgentState(MessagesState):
     hit_heading_cache: bool
     determine_heading_llm_response: HeadingDetermineResponse
     determine_heading_success: bool
-    main_heading: HeadingDetermineResponseDetail
-    alternative_headings: list[HeadingDetermineResponseDetail]
+    determine_heading_fail_reason: str
+    main_heading: dict
+    alternative_headings: list[dict]
     # 确定子目
-    main_subheading: SubheadingDetermineResponseDetail
-    alternative_subheadings: list[SubheadingDetermineResponseDetail]
+    hit_subheading_cache: bool
+    determine_subheading_llm_response: SubheadingDetermineResponse
+    determine_subheading_success: bool
+    main_subheading: dict
+    alternative_subheadings: list[dict]
     # 确定税率线
     main_rate_line: RateLineDetermineResponse
     es_search_results: list

@@ -27,6 +27,8 @@ def init_indices(app):
     init_item_rewrite_index()
     init_chapter_classify_result_index()
     init_heading_classify_result_index()
+    init_subheading_classify_result_index()
+    init_rate_line_classify_result_index()
 
     init_for_evaluation()
 
@@ -203,11 +205,109 @@ def init_heading_classify_result_index():
             logger.debug(f"OpenSearch索引{index_name}创建成功")
 
 
+def init_subheading_classify_result_index():
+    """
+    初始化商品subheading分类结果索引
+    """
+    index_name = IndexName.SUBHEADING_CLASSIFY.value
+    with get_sync_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            subheading = {
+                "properties": {
+                    "subheading_code": {"type": "keyword"},
+                    "subheading_title": {"type": "text"},
+                    "reason": {"type": "text"},
+                    "confidence_score": {"type": "text"},
+                }
+            }
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                        "knn": True
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "rewritten_item": rewritten_item_body,
+                        "rewritten_item_vector": {
+                            "type": "knn_vector",
+                            "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
+                            "space_type": "cosinesimil",
+                        },
+                        "heading_codes": {"type": "keyword"},
+                        "main_subheading": subheading,
+                        "alternative_subheadings": subheading,
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+def init_rate_line_classify_result_index():
+    """
+    初始化商品RateLine分类结果索引
+    """
+    index_name = IndexName.RATE_LINE_CLASSIFY.value
+    with get_sync_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                        "knn": True
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "rewritten_item": rewritten_item_body,
+                        "rewritten_item_vector": {
+                            "type": "knn_vector",
+                            "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
+                            "space_type": "cosinesimil",
+                        },
+                        "subheading_codes": {"type": "keyword"},
+                        "rate_line_result": {
+                            "properties": {
+                                "rate_line_code": {"type": "keyword"},
+                                "rate_line_title": {"type": "keyword"},
+                                "reason": {"type": "keyword"},
+                                "confidence_score": {"type": "keyword"},
+                                "disqualification_others_reason": {"type": "keyword"},
+                            }
+                        },
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
 
 def init_for_evaluation():
     init_evaluate_retrieve_chapter_index()
     init_evaluate_llm_confirm_chapter_index()
     init_evaluate_llm_confirm_heading_index()
+    init_evaluate_llm_confirm_subheading_index()
+    init_evaluate_llm_confirm_rate_line_index()
 
 
 def init_evaluate_retrieve_chapter_index():
@@ -344,6 +444,104 @@ def init_evaluate_llm_confirm_heading_index():
                                 "main_heading": heading_detail,
                                 "alternative_headings": heading_detail,
                                 "reason": {"type": "text"},
+                            }
+                        },
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+def init_evaluate_llm_confirm_subheading_index():
+    """
+    初始化用于评估LLM决策子目是否准确的索引
+    """
+    index_name = IndexName.EVALUATE_LLM_CONFIRM_SUBHEADING.value
+    with get_sync_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            subheading_detail = {
+                "properties": {
+                    "subheading_code": {"type": "keyword"},
+                    "subheading_title": {"type": "text"},
+                    "reason": {"type": "text"},
+                    "confidence_score": {"type": "float"},
+                }
+            }
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "evaluate_version": {
+                            "type": "keyword",
+                        },
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "subheading_documents": {
+                            "type": "text"
+                        },
+                        "llm_response": {
+                            "properties": {
+                                "main_subheading": subheading_detail,
+                                "alternative_subheadings": subheading_detail,
+                                "reason": {"type": "text"},
+                            }
+                        },
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+def init_evaluate_llm_confirm_rate_line_index():
+    """
+    初始化用于评估LLM决策税率线是否准确的索引
+    """
+    index_name = IndexName.EVALUATE_LLM_CONFIRM_RATE_LINE.value
+    with get_sync_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "evaluate_version": {
+                            "type": "keyword",
+                        },
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "rate_line_documents": {
+                            "type": "text"
+                        },
+                        "llm_response": {
+                            "properties": {
+                                "rate_line_code": {"type": "keyword"},
+                                "rate_line_title": {"type": "keyword"},
+                                "reason": {"type": "keyword"},
+                                "confidence_score": {"type": "keyword"},
+                                "disqualification_others_reason": {"type": "keyword"},
                             }
                         },
                         "created_at": {

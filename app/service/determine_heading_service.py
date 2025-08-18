@@ -40,8 +40,8 @@ class DetermineHeadingService:
         return human_message, output, parser.parse(output.content)
 
     async def save_simil_cache(self, origin_item_name: str, rewritten_item: dict, chapter_codes: list[str],
-                               main_heading: HeadingDetermineResponseDetail,
-                               alternative_headings: list[HeadingDetermineResponseDetail] | None):
+                               main_heading: dict,
+                               alternative_headings: list[dict] | None):
         """
         保存语义相似度缓存
         """
@@ -52,9 +52,8 @@ class DetermineHeadingService:
             "rewritten_item": rewritten_item,
             "rewritten_item_vector": rewritten_item_vector,
             "chapter_codes": str(sorted(chapter_codes)),
-            "main_heading": main_heading.model_dump(),
-            "alternative_headings": [heading.model_dump() for heading in
-                                     (alternative_headings if alternative_headings else [])],
+            "main_heading": main_heading,
+            "alternative_headings": alternative_headings,
             "created_at": datetime.now(timezone.utc)
         }
         async with get_async_client() as async_client:
@@ -97,6 +96,7 @@ class DetermineHeadingService:
                         "main_heading": response["hits"]["hits"][0]["_source"]["main_heading"],
                         "alternative_headings": response["hits"]["hits"][0]["_source"]["alternative_headings"],
                     }
+            return {"hit_heading_cache": False}
 
     async def save_for_evaluation(self,
                                   evaluate_version: str,

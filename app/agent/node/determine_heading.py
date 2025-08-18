@@ -53,13 +53,13 @@ def process_llm_response(state: HtsClassifyAgentState):
         final_alternative_headings = []
         if determine_heading_response.alternative_headings:
             final_alternative_headings = [
-                heading for heading in determine_heading_response.alternative_headings
+                heading.model_dump() for heading in determine_heading_response.alternative_headings
                 # if heading.confidence_score > 5
             ]
 
         return {
             "determine_heading_success": True,
-            "main_heading": determine_heading_response.main_heading,
+            "main_heading": determine_heading_response.main_heading.model_dump(),
             "alternative_headings": final_alternative_headings
         }
     else:
@@ -101,7 +101,7 @@ def after_get_cache_edge(state: HtsClassifyAgentState):
         return [DetermineHeadingNodes.ASK_LLM_TO_DETERMINE_HEADING.value]
 
 
-def after_llm_response_edge(state: HtsClassifyAgentState, config):
+def after_llm_response_edge(state: HtsClassifyAgentState):
     if state.get("unexpected_error"):
         return [END]
     else:
@@ -118,6 +118,7 @@ def after_process_llm_response_edge(state: HtsClassifyAgentState, config):
     determine_heading_success = state.get("determine_heading_success")
     if determine_heading_success:
         return DetermineHeadingNodes.SAVE_LAYERED_HEADING_CACHE.value
+    return END
 
 
 def get_determined_chapter_codes(state: HtsClassifyAgentState):

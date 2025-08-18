@@ -109,20 +109,20 @@ async def sse_generator(stream):
                             message=f"最高置信度章节如下:\n"))
                         main_chapter = update_data.get("main_chapter")
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"编码: {main_chapter.chapter_code}\n"
-                                    f"标题: {main_chapter.chapter_title}\n"
-                                    f"置信度: {main_chapter.confidence_score}\n"
-                                    f"原因:{main_chapter.reason}\n"))
+                            message=f"编码: {main_chapter.get("chapter_code")}\n"
+                                    f"标题: {main_chapter.get("chapter_title")}\n"
+                                    f"置信度: {main_chapter.get("confidence_score")}\n"
+                                    f"原因:{main_chapter.get("reason")}\n"))
                         alternative_chapters = update_data.get("alternative_chapters")
                         if alternative_chapters:
                             yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                                 message=f"\n候选章节如下:\n"))
                             for chapter in alternative_chapters:
                                 yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                                    message=f"编码: {chapter.chapter_code}\n"
-                                            f"标题: {chapter.chapter_title}\n"
-                                            f"置信度: {chapter.confidence_score}\n"
-                                            f"原因:{chapter.reason}\n"))
+                                    message=f"编码: {chapter.get("chapter_code")}\n"
+                                            f"标题: {chapter.get("chapter_title")}\n"
+                                            f"置信度: {chapter.get("confidence_score")}\n"
+                                            f"原因:{chapter.get("reason")}\n"))
                                 yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(message="\n"))
             # 类目确定节点
             if sub_graph_name == HtsAgents.DETERMINE_HEADING.code:
@@ -138,20 +138,20 @@ async def sse_generator(stream):
                             message=f"最高置信度类目如下:\n"))
                         main_heading = update_data.get("main_heading")
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"编码: {main_heading.heading_code}\n"
-                                    f"标题: {main_heading.heading_title}\n"
-                                    f"置信度: {main_heading.confidence_score}\n"
-                                    f"原因:{main_heading.reason}\n"))
+                            message=f"编码: {main_heading.get("heading_code")}\n"
+                                    f"标题: {main_heading.get("heading_title")}\n"
+                                    f"置信度: {main_heading.get("confidence_score")}\n"
+                                    f"原因:{main_heading.get("reason")}\n"))
                         alternative_headings = update_data.get("alternative_headings")
                         if alternative_headings:
                             yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                                 message=f"\n候选类目如下:\n"))
                             for heading in alternative_headings:
                                 yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                                    message=f"编码: {heading.heading_code}\n"
-                                            f"标题: {heading.heading_title}\n"
-                                            f"置信度: {heading.confidence_score}\n"
-                                            f"原因:{heading.reason}\n"))
+                                    message=f"编码: {heading.get("heading_code")}\n"
+                                            f"标题: {heading.get("heading_title")}\n"
+                                            f"置信度: {heading.get("confidence_score")}\n"
+                                            f"原因:{heading.get("reason")}\n"))
                                 yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(message="\n"))
             # 子目确定节点
             if sub_graph_name == HtsAgents.DETERMINE_SUBHEADING.code:
@@ -162,25 +162,25 @@ async def sse_generator(stream):
                     elif node == DetermineSubheadingNodes.ENTER_DETERMINE_SUBHEADING:
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在确定子目信息...\n"))
-                    elif node == DetermineSubheadingNodes.DETERMINE_SUBHEADING:
+                    elif node == DetermineSubheadingNodes.PROCESS_LLM_RESPONSE:
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                             message=f"最高置信度子目如下:\n"))
                         main_subheading = update_data.get("main_subheading")
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"编码: {main_subheading.subheading_code}\n"
-                                    f"标题: {main_subheading.subheading_title}\n"
-                                    f"置信度: {main_subheading.confidence_score}\n"
-                                    f"原因:{main_subheading.reason}\n"))
+                            message=f"编码: {main_subheading.get("subheading_code")}\n"
+                                    f"标题: {main_subheading.get("subheading_title")}\n"
+                                    f"置信度: {main_subheading.get("confidence_score")}\n"
+                                    f"原因:{main_subheading.get("reason")}\n"))
                         alternative_subheadings = update_data.get("alternative_subheadings")
                         if alternative_subheadings:
                             yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                                 message=f"\n候选子目如下:\n"))
                             for subheading in alternative_subheadings:
                                 yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                                    message=f"编码: {subheading.subheading_code}\n"
-                                            f"标题: {subheading.subheading_title}\n"
-                                            f"置信度: {subheading.confidence_score}\n"
-                                            f"原因:{subheading.reason}\n"))
+                                    message=f"编码: {subheading.get("subheading_code")}\n"
+                                            f"标题: {subheading.get("subheading_title")}\n"
+                                            f"置信度: {subheading.get("confidence_score")}\n"
+                                            f"原因:{subheading.get("reason")}\n"))
                                 yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(message="\n"))
             # 税率线确定节点
             if sub_graph_name == HtsAgents.DETERMINE_RATE_LINE.code:
@@ -196,10 +196,10 @@ async def sse_generator(stream):
                             message=f"最终确定税率线如下:\n"))
                         main_rate_line = update_data.get("main_rate_line")
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"编码: {main_rate_line.rate_line_code}\n"
-                                    f"标题: {main_rate_line.rate_line_title}\n"
-                                    f"置信度: {main_rate_line.confidence_score}\n"
-                                    f"原因:{main_rate_line.reason}\n"))
+                            message=f"编码: {main_rate_line.get("rate_line_code")}\n"
+                                    f"标题: {main_rate_line.get("rate_line_title")}\n"
+                                    f"置信度: {main_rate_line.get("confidence_score")}\n"
+                                    f"原因:{main_rate_line.get("reason")}\n"))
             if sub_graph_name == HtsAgents.GENERATE_FINAL_OUTPUT.code:
                 for node, update_data in updates.items():
                     if node == "__interrupt__":

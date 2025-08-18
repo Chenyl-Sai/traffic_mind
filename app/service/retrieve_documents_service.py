@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timezone
 
 from app.service.vector_store_service import FAISSVectorStore
-from app.core.opensearch import get_async_client
+from app.core.opensearch import get_async_opensearch_client
 from app.core.constants import IndexName
 from app.service.wco_hs_service import get_heading_detail_by_chapter_codes, get_subheading_detail_by_heading_codes, \
     get_subheading_dict_by_subheading_codes
@@ -36,7 +36,7 @@ class RetrieveDocumentsService:
             "chapter_documents": chapter_documents,
             "created_at": datetime.now(timezone.utc),
         }
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             await async_client.index(index=IndexName.EVALUATE_RETRIEVE_CHAPTER, body=document)
 
     async def retrieve_heading_documents(self, chapter_codes: list[str]) -> str:

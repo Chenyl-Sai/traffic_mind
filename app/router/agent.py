@@ -191,7 +191,7 @@ async def sse_generator(stream):
                     elif node == DetermineRateLineNodes.ENTER_DETERMINE_RATE_LINE:
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在确定税率线信息...\n"))
-                    elif node == DetermineRateLineNodes.DETERMINE_RATE_LINE:
+                    elif node == DetermineRateLineNodes.PROCESS_LLM_RESPONSE:
                         yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
                             message=f"最终确定税率线如下:\n"))
                         main_rate_line = update_data.get("main_rate_line")

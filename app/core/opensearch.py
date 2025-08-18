@@ -9,14 +9,14 @@ from app.core.constants import IndexName, DEFAULT_EMBEDDINGS_DIMENSION
 logger = logging.getLogger(__name__)
 
 
-def get_async_client() -> AsyncOpenSearch:
+def get_async_opensearch_client() -> AsyncOpenSearch:
     return AsyncOpenSearch(hosts=settings.OPEN_SEARCH_HOSTS,
                            http_auth=(settings.OPEN_SEARCH_USERNAME, settings.OPEN_SEARCH_PASSWORD),
                            use_ssl=True,
                            verify_certs=False)
 
 
-def get_sync_client() -> OpenSearch:
+def get_sync_opensearch_client() -> OpenSearch:
     return OpenSearch(hosts=settings.OPEN_SEARCH_HOSTS,
                       http_auth=(settings.OPEN_SEARCH_USERNAME, settings.OPEN_SEARCH_PASSWORD),
                       use_ssl=True,
@@ -55,7 +55,7 @@ def init_item_rewrite_index():
     初始化重写商品索引
     """
     index_name = IndexName.ITEM_REWRITE.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -112,7 +112,7 @@ def init_chapter_classify_result_index():
     初始化商品章节分类结果索引
     """
     index_name = IndexName.CHAPTER_CLASSIFY.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -161,7 +161,7 @@ def init_heading_classify_result_index():
     初始化商品heading分类结果索引
     """
     index_name = IndexName.HEADING_CLASSIFY.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -210,7 +210,7 @@ def init_subheading_classify_result_index():
     初始化商品subheading分类结果索引
     """
     index_name = IndexName.SUBHEADING_CLASSIFY.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -259,7 +259,7 @@ def init_rate_line_classify_result_index():
     初始化商品RateLine分类结果索引
     """
     index_name = IndexName.RATE_LINE_CLASSIFY.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -315,7 +315,7 @@ def init_evaluate_retrieve_chapter_index():
     初始化用于评估章节检索是否准确的索引
     """
     index_name = IndexName.EVALUATE_RETRIEVE_CHAPTER.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -358,7 +358,7 @@ def init_evaluate_llm_confirm_chapter_index():
     初始化用于评估LLM决策章节是否准确的索引
     """
     index_name = IndexName.EVALUATE_LLM_CONFIRM_CHAPTER.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -409,7 +409,7 @@ def init_evaluate_llm_confirm_heading_index():
     初始化用于评估LLM决策类目是否准确的索引
     """
     index_name = IndexName.EVALUATE_LLM_CONFIRM_HEADING.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -461,7 +461,7 @@ def init_evaluate_llm_confirm_subheading_index():
     初始化用于评估LLM决策子目是否准确的索引
     """
     index_name = IndexName.EVALUATE_LLM_CONFIRM_SUBHEADING.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:
@@ -513,7 +513,7 @@ def init_evaluate_llm_confirm_rate_line_index():
     初始化用于评估LLM决策税率线是否准确的索引
     """
     index_name = IndexName.EVALUATE_LLM_CONFIRM_RATE_LINE.value
-    with get_sync_client() as sync_client:
+    with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
         else:

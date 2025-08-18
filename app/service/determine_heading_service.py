@@ -6,7 +6,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.language_models import BaseChatModel
 
-from app.core.opensearch import get_async_client
+from app.core.opensearch import get_async_opensearch_client
 from app.llm.prompt.prompt_template import determine_heading_template
 from app.schema.llm.llm import HeadingDetermineResponse, HeadingDetermineResponseDetail
 from app.service.rewrite_item_service import RewriteItemEmbeddingsService
@@ -56,7 +56,7 @@ class DetermineHeadingService:
             "alternative_headings": alternative_headings,
             "created_at": datetime.now(timezone.utc)
         }
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             await async_client.index(index=IndexName.HEADING_CLASSIFY, body=document)
 
     async def get_simil_cache(self, rewritten_item: dict, chapter_codes: list[str], ):
@@ -66,7 +66,7 @@ class DetermineHeadingService:
         sorted_chapter_codes = str(sorted(chapter_codes))
         rewritten_item_vector = await self.rewritten_item_embeddings_service.get_rewritten_item_embeddings(
             rewritten_item)
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             response = await async_client.search(index=IndexName.HEADING_CLASSIFY, body={
                 "query": {
                     "bool": {
@@ -113,5 +113,5 @@ class DetermineHeadingService:
             "llm_response": llm_response.model_dump(),
             "created_at": datetime.now(timezone.utc),
         }
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             await async_client.index(index=IndexName.EVALUATE_LLM_CONFIRM_HEADING, body=document)

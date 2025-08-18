@@ -28,7 +28,7 @@ def start_determine_subheading(state: HtsClassifyAgentState):
 async def get_from_cache(state: HtsClassifyAgentState, config):
     is_for_evaluation = config["configurable"].get("is_for_evaluation", False)
     if is_for_evaluation:
-        return {"hit_heading_cache": False}
+        return {"hit_subheading_cache": False}
     else:
         cache = await determine_subheading_service.get_simil_cache(rewritten_item=state.get("rewritten_item"),
                                                                    heading_codes=get_confirmed_heading_codes(state))

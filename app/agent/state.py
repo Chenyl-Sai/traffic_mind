@@ -46,7 +46,11 @@ class HtsClassifyAgentState(MessagesState):
     main_subheading: dict
     alternative_subheadings: list[dict]
     # 确定税率线
-    main_rate_line: RateLineDetermineResponse
+    hit_rate_line_cache: bool
+    determine_rate_line_llm_response: RateLineDetermineResponse
+    determine_rate_line_success: bool
+    main_rate_line: dict
+
     es_search_results: list
     evaluation: dict
     final_output: dict

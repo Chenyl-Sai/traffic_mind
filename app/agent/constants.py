@@ -76,8 +76,11 @@ class DetermineSubheadingNodes(str, Enum):
 
 class DetermineRateLineNodes(str, Enum):
     ENTER_DETERMINE_RATE_LINE = "enter_determine_rate_line"
+    GET_RATE_LINE_FROM_CACHE = "get_rate_line_from_cache"
     ASK_LLM_TO_DETERMINE_RATE_LINE = "ask_llm_to_determine_rate_line"
-    DETERMINE_RATE_LINE = "determine_rate_line"
+    PROCESS_LLM_RESPONSE = "process_llm_response"
+    SAVE_LLM_RESPONSE_FOR_EVALUATION = "save_llm_response_for_evaluation"
+    SAVE_LAYERED_RATE_LINE_CACHE = "save_layered_rate_line_cache"
 
 class GenerateFinalOutputNodes(str, Enum):
     ENTER_GENERATE_FINAL_OUTPUT = "enter_generate_final_output"

@@ -8,7 +8,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 
 from app.core.constants import IndexName
-from app.core.opensearch import get_async_client
+from app.core.opensearch import get_async_opensearch_client
 from app.db.session import AsyncSessionLocal
 from app.llm.prompt.prompt_template import determine_chapter_template
 from app.model.hts_classify_cache_model import DetermineChapterCache
@@ -86,7 +86,7 @@ class DetermineChapterService:
             "alternative_chapters": alternative_chapters,
             "created_at": datetime.now(timezone.utc)
         }
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             await async_client.index(index=IndexName.CHAPTER_CLASSIFY, body=document)
 
     async def get_from_cache(self, origin_item: str, rag_version: str, chapter_documents: list[str],
@@ -125,7 +125,7 @@ class DetermineChapterService:
         rewritten_item_vector = await self.rewritten_item_embeddings_service.get_rewritten_item_embeddings(
             rewritten_item)
         # 从opensearch中获取缓存
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             response = await async_client.search(index=IndexName.CHAPTER_CLASSIFY.value, body={
                 "query": {
                     "bool": {
@@ -172,5 +172,5 @@ class DetermineChapterService:
             "llm_response": llm_response.model_dump(),
             "created_at": datetime.now(timezone.utc),
         }
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             await async_client.index(index=IndexName.EVALUATE_LLM_CONFIRM_CHAPTER, body=document)

@@ -123,14 +123,17 @@ class RateLineDetermineResponse(BaseModel):
     """
     最终选择的税率线的结果
     """
-    rate_line_code: str = Field(title="税率线编码", description="税率线编码,入参之一，直接返回")
-    rate_line_title: str = Field(title="税率线标题", description="税率线标题，入参之一，直接返回")
-    reason: str = Field(title="选择此税率线的原因", description="选择此税率线的简单的依据说明", default=None)
-    confidence_score: float = Field(title="选择此税率线的置信度",
+    rate_line_code: str | None = Field(title="税率线编码", description="税率线编码,入参之一，直接返回", default=None)
+    rate_line_title: str | None = Field(title="税率线标题", description="税率线标题，入参之一，直接返回", default=None)
+    reason: str | None = Field(title="选择此税率线的原因", description="选择此税率线的简单的依据说明", default=None)
+    confidence_score: float | None = Field(title="选择此税率线的置信度",
                                     description="数值在0-10之间，商品所属税率线概率越大数值越大",
                                     default=0.0)
     disqualification_others_reason: str | None = Field(title="弃选其他选项原因",
                                     description="未选择其他提供的rate_line的原因说明",
+                                    default=None)
+    fail_reason: str | None = Field(title="失败原因",
+                                    description="当所有税率线都不满足条件时返回此字段，否则不用返回此字段",
                                     default=None)
 
 

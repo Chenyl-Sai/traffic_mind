@@ -3,7 +3,7 @@ from langchain_core.language_models import BaseChatModel
 from app.db.session import AsyncSessionLocal
 from app.model.hts_classify_cache_model import ItemRewriteCache
 from app.repo.hts_classify_cache_repo import insert_item_rewrite_cache, select_item_rewrite_cache
-from app.core.opensearch import get_async_client
+from app.core.opensearch import get_async_opensearch_client
 from app.core.constants import IndexName, RedisKeyPrefix
 from app.schema.llm.llm import ItemRewriteResponse
 from app.llm.prompt.prompt_template import rewrite_item_template
@@ -41,7 +41,7 @@ class ItemRewriteCacheService:
                 }
 
         # 如果精确查询没有匹配，使用向量字段进行相似度查询
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             item_vector = self.embeddings.embed_query(item)
             # 中文相似度
             response = await async_client.search(index=IndexName.ITEM_REWRITE.value, body={
@@ -115,7 +115,7 @@ class ItemRewriteCacheService:
             "thread_id": config.get("configurable", {}).get("thread_id", ""),
             "created_at": datetime.now(timezone.utc),
         }
-        async with get_async_client() as async_client:
+        async with get_async_opensearch_client() as async_client:
             await async_client.index(index=IndexName.ITEM_REWRITE.value, body=document)
 
 

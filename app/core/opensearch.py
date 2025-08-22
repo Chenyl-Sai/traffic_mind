@@ -29,6 +29,7 @@ def init_indices(app):
     init_heading_classify_result_index()
     init_subheading_classify_result_index()
     init_rate_line_classify_result_index()
+    init_e2e_cache_index()
 
     init_for_evaluation()
 
@@ -38,7 +39,8 @@ rewritten_item_body = {
         "name": {"type": "text"},
         "cn_name": {"type": "text"},
         "en_name": {"type": "text"},
-        "classification_name": {"type": "keyword"},
+        "classification_name_cn": {"type": "keyword"},
+        "classification_name_en": {"type": "keyword"},
         "brand": {"type": "keyword"},
         "materials": {"type": "text"},
         "purpose": {"type": "text"},
@@ -300,6 +302,48 @@ def init_rate_line_classify_result_index():
             }
             sync_client.indices.create(index=index_name, body=body)
             logger.debug(f"OpenSearch索引{index_name}创建成功")
+
+
+def init_e2e_cache_index():
+    """
+    初始化商品RateLine分类结果索引
+    """
+    index_name = IndexName.CLASSIFY_E2E_CACHE.value
+    with get_sync_opensearch_client() as sync_client:
+        if sync_client.indices.exists(index=index_name):
+            logger.debug(f"OpenSearch索引{index_name}已存在")
+        else:
+            body = {
+                "settings": {
+                    "index": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                        "knn": True
+                    }
+                },
+                "mappings": {
+                    "properties": {
+                        "origin_item_name": {
+                            "type": "keyword",
+                        },
+                        "rewritten_item": rewritten_item_body,
+                        "rewritten_item_vector": {
+                            "type": "knn_vector",
+                            "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
+                            "space_type": "cosinesimil",
+                        },
+                        "rate_line_code": {"type": "keyword"},
+                        "rate_line_title": {"type": "text"},
+                        "final_description": {"type": "text"},
+                        "created_at": {
+                            "type": "date"
+                        }
+                    }
+                }
+            }
+            sync_client.indices.create(index=index_name, body=body)
+            logger.debug(f"OpenSearch索引{index_name}创建成功")
+
 
 
 def init_for_evaluation():

@@ -5,7 +5,7 @@ from langchain_community.vectorstores import FAISS
 
 
 class FAISSVectorStore:
-    def __init__(self, index_dir: str, index_name:str, embeddings, dimension: int = 768):
+    def __init__(self, index_dir: str, index_name: str, embeddings, dimension: int = 768):
         self.index_dir = index_dir
         self.index_name = index_name
         self.dimension = dimension
@@ -27,7 +27,8 @@ class FAISSVectorStore:
             # 创建空的 FAISS 索引
             index = faiss.IndexFlatL2(self.dimension)
             # 创建空的 vectorstore
-            return FAISS(embedding_function=self.embeddings, index = index, docstore=InMemoryDocstore(), index_to_docstore_id={})
+            return FAISS(embedding_function=self.embeddings, index=index, docstore=InMemoryDocstore(),
+                         index_to_docstore_id={})
             # return FAISS.from_documents([], self.embeddings)
 
     def save_index(self):
@@ -39,11 +40,12 @@ class FAISSVectorStore:
         """添加向量到索引"""
         await self.index.aadd_texts(texts=texts, metadatas=metadatas)
 
-    async def search(self, query_text, filter, search_type="similarity", k=5):
+    async def search(self, query_text, filter, search_type="similarity", k=5, fetch_k=20):
         """搜索相似向量"""
         if search_type == "similarity":
-            return await self.index.asimilarity_search(query=query_text, k=k, filter=filter)
+            return await self.index.asimilarity_search(query=query_text, k=k, fetch_k=fetch_k, filter=filter)
         elif search_type == "mmr":
-            return await self.index.amax_marginal_relevance_search(query=query_text, k=k, filter=filter)
+            return await self.index.amax_marginal_relevance_search(query=query_text, k=k, fetch_k=fetch_k,
+                                                                   filter=filter)
         else:
             raise ValueError(f"Invalid search type: {search_type}")

@@ -2,24 +2,21 @@
 获取相关文档
 """
 import json, logging
+from xml.dom.minidom import DocumentType
 
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.store.base import BaseStore
 from langgraph.graph import START, StateGraph
 
-from app.agent.constants import RetrieveDocumentsNodes
+from app.agent.constants import RetrieveDocumentsNodes, DocumentTypes
 from app.agent.state import HtsClassifyAgentState, state_has_error
 from app.agent.constants import HtsAgents
 from app.agent.util.exception_handler import safe_raise_exception_node
-from app.dep.llm import get_chapter_vector_store
-from app.service.hts_service import get_rate_lines_by_wco_subheadings
+from app.dep.llm import get_vector_store
 from app.service.retrieve_documents_service import RetrieveDocumentsService
-from app.service.wco_hs_service import get_heading_detail_by_chapter_codes, get_subheading_detail_by_heading_codes, \
-    get_subheading_dict_by_subheading_codes
 
 logger = logging.getLogger(__name__)
 
-retrieve_service = RetrieveDocumentsService(chapter_vectorstore=get_chapter_vector_store())
+retrieve_service = RetrieveDocumentsService(vectorstore=get_vector_store())
 
 
 def start_retrieve_documents(state: HtsClassifyAgentState):
@@ -28,31 +25,40 @@ def start_retrieve_documents(state: HtsClassifyAgentState):
 
 
 @safe_raise_exception_node(logger=logger)
-async def retrieve_documents(state: HtsClassifyAgentState, config, store: BaseStore):
-    if state.get("current_document_type") == "chapter":
-        chapter_documents = await retrieve_service.retrieve_chapter_documents(state.get("rewritten_item"))
-        return {"chapter_documents": chapter_documents}
-    elif state.get("current_document_type") == "heading":
+async def retrieve_documents(state: HtsClassifyAgentState):
+    if state.get("current_document_type") == DocumentTypes.CHAPTER:
+        chapter_documents, chapter_codes = await retrieve_service.retrieve_chapter_documents(
+            state.get("rewritten_item"))
+        return {"chapter_documents": chapter_documents, "candidate_chapter_codes": chapter_codes}
+    elif state.get("current_document_type") == DocumentTypes.HEADING:
         # 从数据库获取chapter下heading信息
         chapter_codes = [state.get("main_chapter").get("chapter_code")]
         alternative_chapters = state.get("alternative_chapters")
         if alternative_chapters:
-            chapter_codes.extend([alternative_chapter.get("chapter_code") for alternative_chapter in alternative_chapters])
-        return {"heading_documents": await retrieve_service.retrieve_heading_documents(chapter_codes)}
-    elif state.get("current_document_type") == "subheading":
+            chapter_codes.extend(
+                [alternative_chapter.get("chapter_code") for alternative_chapter in alternative_chapters])
+        heading_documents, candidate_heading_codes = await retrieve_service.retrieve_heading_documents(
+            state.get("rewritten_item"), chapter_codes)
+        return {"heading_documents": heading_documents, "candidate_heading_codes": candidate_heading_codes}
+    elif state.get("current_document_type") == DocumentTypes.SUBHEADING:
         # 从数据库获取heading下subheading信息
         heading_codes = [state.get("main_heading").get("heading_code")]
         alternative_headings = state.get("alternative_headings")
         if alternative_headings:
-            heading_codes.extend([alternative_heading.get("heading_code") for alternative_heading in alternative_headings])
-        return {"subheading_documents": await retrieve_service.retrieve_subheading_documents(heading_codes)}
-    elif state.get("current_document_type") == "rate-line":
+            heading_codes.extend(
+                [alternative_heading.get("heading_code") for alternative_heading in alternative_headings])
+        subheading_documents, candidate_subheading_codes = await retrieve_service.retrieve_subheading_documents(
+            heading_codes)
+        return {"subheading_documents": subheading_documents, "candidate_subheading_codes": candidate_subheading_codes}
+    elif state.get("current_document_type") == DocumentTypes.RATE_LINE:
         subheading_codes = [state.get("main_subheading").get("subheading_code")]
         alternative_subheadings = state.get("alternative_subheadings")
         if alternative_subheadings:
             subheading_codes.extend(
                 [alternative_subheading.get("subheading_code") for alternative_subheading in alternative_subheadings])
-        return {"rate_line_documents": await retrieve_service.retrieve_rate_line_documents(subheading_codes)}
+        rate_line_document, candidate_rate_line_codes = await retrieve_service.retrieve_rate_line_documents(
+            subheading_codes)
+        return {"rate_line_documents": rate_line_document, "candidate_rate_line_codes": candidate_rate_line_codes}
 
 
 @safe_raise_exception_node(logger=logger, ignore_exception=True)
@@ -64,7 +70,7 @@ async def save_retrieve_result_for_evaluation(state: HtsClassifyAgentState, conf
     evaluate_version = config["configurable"].get("evaluate_version", "-1")
     # 只有评估请求才记录
     if is_for_evaluation:
-        if state.get("current_document_type") == "chapter":
+        if state.get("current_document_type") == DocumentTypes.CHAPTER:
             documents = state.get("chapter_documents")
             documents_dict_list = [json.loads(document) for document in documents]
             await retrieve_service.save_chapter_retrieve_evaluation(

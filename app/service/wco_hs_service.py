@@ -16,7 +16,7 @@ from app.repo.wco_hs_repo import insert_update_record, insert_sections, update_r
     select_chapters_by_section, select_headings_by_chapter, select_wco_current_version, \
     delete_wco_section_by_version, disable_last_version, insert_current_version, select_all_chapters, \
     select_current_version_chapters_by_codes, select_current_version_headings_by_codes, select_subheadings_by_heading, \
-    select_current_version_subheadings_by_codes
+    select_current_version_subheadings_by_codes, select_all_headings
 from app.model.wco_hs_model import WcoHsSection, WcoHsUpdateRecord, WcoHsChapter, WcoHsHeading, WcoHsSubheading, \
     WcoHsVersionHistory
 from app.schema.wco_hs import CheckUpdateResponse, WcoHsProcessResult
@@ -322,24 +322,51 @@ async def clear_last_update_cache(session: AsyncSession, version):
         await delete_wco_section_by_version(session, version)
 
 
-async def get_current_version_chapters(session: AsyncSession):
+async def get_current_version(session: AsyncSession):
+    """
+    获取当前使用的版本
+    """
     version_record = await select_wco_current_version(session)
     current_version = version_record.version if version_record else None
+    return current_version if current_version else None
+
+
+async def get_current_version_chapters(session: AsyncSession):
+    current_version = await get_current_version(session)
     if current_version:
         return await select_all_chapters(session, current_version)
     raise Exception("没有获取到当前版本，请先初始化数据！")
+
+async def get_current_version_headings(session: AsyncSession):
+    current_version = await get_current_version(session)
+    if current_version:
+        return await select_all_headings(session, current_version)
+    raise Exception("没有获取到当前版本，请先初始化数据！")
+
+async def get_chapters_by_chapter_codes(session: AsyncSession, chapter_codes: list[str]):
+    current_version = await get_current_version(session)
+    if current_version:
+        return await select_current_version_chapters_by_codes(session, current_version, chapter_codes)
+    raise Exception("没有获取到当前版本，请先初始化数据！")
+
+async def get_headings_by_heading_codes(session: AsyncSession, heading_codes: list[str]):
+    current_version = await get_current_version(session)
+    if current_version:
+        return await select_current_version_headings_by_codes(session, current_version, heading_codes)
+    raise Exception("没有获取到当前版本，请先初始化数据！")
+
+async def get_subheadings_by_subheading_codes(session: AsyncSession, subheading_codes: list[str]):
+    current_version = await get_current_version(session)
+    if current_version:
+        return await select_current_version_subheadings_by_codes(session, current_version, subheading_codes)
+    raise Exception("没有获取到当前版本，请先初始化数据！")
+
 
 
 async def get_heading_detail_by_chapter_codes(chapter_codes: list):
     chapter_detail_dict = dict()
     async with AsyncSessionLocal() as session:
-
-        version_record = await select_wco_current_version(session)
-        current_version = version_record.version if version_record else None
-        if not current_version:
-            raise Exception("没有获取到当前版本，请先初始化数据！")
-
-        chapters = await select_current_version_chapters_by_codes(session, current_version, chapter_codes)
+        chapters = await get_chapters_by_chapter_codes(session, chapter_codes)
         for chapter in chapters:
             headings = await select_headings_by_chapter(session, chapter.id)
             if headings:
@@ -353,13 +380,7 @@ async def get_heading_detail_by_chapter_codes(chapter_codes: list):
 async def get_subheading_detail_by_heading_codes(heading_codes: list):
     chapter_heading_detail_dict = dict()
     async with AsyncSessionLocal() as session:
-
-        version_record = await select_wco_current_version(session)
-        current_version = version_record.version if version_record else None
-        if not current_version:
-            raise Exception("没有获取到当前版本，请先初始化数据！")
-
-        headings = await select_current_version_headings_by_codes(session, current_version, heading_codes)
+        headings = await get_headings_by_heading_codes(session, heading_codes)
         for heading in headings:
             chapter = await heading.awaitable_attrs.chapter
             chapter_key = chapter.chapter_code + ":" + chapter.chapter_title
@@ -378,13 +399,7 @@ async def get_subheading_detail_by_heading_codes(heading_codes: list):
 async def get_subheading_dict_by_subheading_codes(subheading_codes: list):
     chapter_heading_detail_dict = dict()
     async with AsyncSessionLocal() as session:
-
-        version_record = await select_wco_current_version(session)
-        current_version = version_record.version if version_record else None
-        if not current_version:
-            raise Exception("没有获取到当前版本，请先初始化数据！")
-
-        sub_headings = await select_current_version_subheadings_by_codes(session, current_version, subheading_codes)
+        sub_headings = await get_subheadings_by_subheading_codes(session, subheading_codes)
         for sub_heading in sub_headings:
             heading = await sub_heading.awaitable_attrs.heading
             chapter = await heading.awaitable_attrs.chapter

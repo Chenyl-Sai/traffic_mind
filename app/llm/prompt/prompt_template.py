@@ -143,10 +143,37 @@ Please provide your analysis in JSON format as specified, ensuring clarity and p
 """
 
 generate_final_output_template = """
-Based on the step-by-step classification dialog history, generate a final comprehensive output in English that:
+You are a customs classification expert.
+I will provide you with the full decision-making process of how a product was classified from its original description to its final rate line code. This includes the candidates considered at each layer and the reasons for the selections.
+Your task is to generate a **summary explanation** that clearly states why the product was ultimately classified under this rate line code.
+**Important instructions**:
+    - Base your explanation strictly on the decision process I provide. Do not introduce additional assumptions or external information.
+    - The output should be formal, clear, logically structured, and suitable for classification documentation.
+    - Emphasize the logical consistency of the choices made at each level and the overall appropriateness of the final code.
 
-1. Clearly states the determined HS code
-2. Summarizes the classification rationale
+Here is the decision process:
+    Original product description: {original_item}
+    Rewritten product description: {rewritten_item}
+
+**Decision Process**
+    Chapter candidates: {chapter_candidates}
+        Selected: {selected_chapter}
+        Reason: {reason_chapter}
+    
+    Heading candidates: {heading_candidates}
+        Selected: {selected_heading}
+        Reason: {reason_heading}
+    
+    Subheading candidates: {subheading_candidates}
+        Selected: {selected_subheading}
+        Reason: {reason_subheading}
+    
+    Rate line candidates: {rate_line_candidates}
+        Selected: {selected_rate_line}
+        Reason: {reason_rate_line}
+    
+    Final Result
+        Rate line code: {final_code}
 
 {format_instructions}
 """

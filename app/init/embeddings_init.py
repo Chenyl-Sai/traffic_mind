@@ -7,13 +7,13 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.service.vector_store_service import FAISSVectorStore
-from app.service.wco_hs_service import get_current_version_chapters
+from app.service.wco_hs_service import get_current_version_chapters, get_current_version_headings
 from app.llm.chain.expand_hs_title import get_chapter_extends
 
 logger = logging.getLogger(__name__)
 
 
-async def build_vector_store(session: AsyncSession, vector_store: FAISSVectorStore):
+async def build_chapter_vector_store(session: AsyncSession, vector_store: FAISSVectorStore):
     changed: bool = False
     try:
         chapters = await get_current_version_chapters(session)
@@ -38,6 +38,35 @@ async def build_vector_store(session: AsyncSession, vector_store: FAISSVectorSto
             await vector_store.add_texts([text], [{"type": "chapter",
                                                    "code": chapter.chapter_code,
                                                    "section": section.section_code}])
+            changed = True
+    finally:
+        if changed:
+            vector_store.save_index()
+
+
+async def build_heading_vector_store(session: AsyncSession, vector_store: FAISSVectorStore):
+    """
+    构建heading层的向量
+    """
+    changed: bool = False
+    try:
+        exist_heading = next(
+            (doc for doc in vector_store.index.docstore._dict.values() if doc.metadata.get("type") == "heading"), None)
+        if exist_heading:
+            logger.info("Heading already inited")
+        else:
+            headings = await get_current_version_headings(session)
+            texts = [json.dumps({
+                "heading_code": heading.heading_code,
+                "heading_title": heading.heading_title,
+            }) for heading in headings]
+            metadatas = [{
+                "type": "heading",
+                "code": heading.heading_code,
+                "chapter_code": heading.heading_code[:2],
+            } for heading in headings]
+
+            await vector_store.add_texts(texts, metadatas)
             changed = True
     finally:
         if changed:

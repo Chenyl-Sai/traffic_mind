@@ -2,25 +2,33 @@ from typing import TypedDict, Annotated
 
 from langgraph.graph import MessagesState
 
-from app.schema.llm.llm import SubheadingDetermineResponse, HeadingDetermineResponseDetail, \
-    HeadingDetermineResponse, SubheadingDetermineResponseDetail, RateLineDetermineResponse, ItemRewriteResponse, \
-    ChapterDetermineResponse
+from app.agent.constants import DocumentTypes
+from app.schema.llm.llm import SubheadingDetermineResponse, HeadingDetermineResponse, RateLineDetermineResponse, \
+    ItemRewriteResponse, ChapterDetermineResponse, GenerateFinalOutputResponse
+
+class OutputMessage(TypedDict):
+    type: str
+    message: str
 
 
 class HtsClassifyAgentState(MessagesState):
     # 用户录入商品信息
     item: str
-    # 当前所处的agent
+
+    # 输出message信息：
+    current_output_message: OutputMessage
+
+    # supervisor
+    hit_e2e_exact_cache: bool
+    hit_e2e_simil_cache: bool
     current_agent: str
-    # 下一个agent
-    next_agent: str
     # 商品重写
     hit_rewrite_cache: bool
     rewrite_llm_response: ItemRewriteResponse
     rewrite_success: bool
     rewritten_item: dict[str, str]
     # 文档检索
-    current_document_type: str
+    current_document_type: DocumentTypes
     chapter_documents: list[str]
     heading_documents: str
     subheading_documents: str
@@ -30,6 +38,7 @@ class HtsClassifyAgentState(MessagesState):
     determine_chapter_llm_response: ChapterDetermineResponse
     determine_chapter_success: bool
     determine_chapter_fail_reason: str
+    candidate_chapter_codes: list[str]
     main_chapter: dict
     alternative_chapters: list[dict]
     # 确定类目
@@ -37,23 +46,28 @@ class HtsClassifyAgentState(MessagesState):
     determine_heading_llm_response: HeadingDetermineResponse
     determine_heading_success: bool
     determine_heading_fail_reason: str
+    candidate_heading_codes: dict[str, list]
     main_heading: dict
     alternative_headings: list[dict]
     # 确定子目
     hit_subheading_cache: bool
     determine_subheading_llm_response: SubheadingDetermineResponse
     determine_subheading_success: bool
+    candidate_subheading_codes: dict[str, list]
     main_subheading: dict
     alternative_subheadings: list[dict]
     # 确定税率线
     hit_rate_line_cache: bool
     determine_rate_line_llm_response: RateLineDetermineResponse
     determine_rate_line_success: bool
+    candidate_rate_line_codes: dict[str, list]
     main_rate_line: dict
+    # 最终输出
+    final_output_llm_response: GenerateFinalOutputResponse
+    final_rate_line_code: str
+    final_description: str
 
-    es_search_results: list
-    evaluation: dict
-    final_output: dict
+    # 异常处理
     unexpected_error: BaseException
     unexpected_error_message: str
 

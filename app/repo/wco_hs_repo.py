@@ -118,6 +118,11 @@ async def select_all_chapters(session: AsyncSession, version: str):
     return result.scalars().all()
 
 
+async def select_all_headings(session:AsyncSession, version: str):
+    result = await session.execute(select(WcoHsHeading).filter(WcoHsHeading.version == version))
+    return result.scalars().all()
+
+
 async def select_current_version_chapters_by_codes(session: AsyncSession, current_version: str, codes: list[str]):
     result = await session.execute(
         select(WcoHsChapter).filter(WcoHsChapter.version == current_version, WcoHsChapter.chapter_code.in_(codes)))

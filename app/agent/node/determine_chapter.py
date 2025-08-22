@@ -48,25 +48,8 @@ async def ask_llm_to_determine_chapter(state: HtsClassifyAgentState):
 
 
 @safe_raise_exception_node(logger=logger)
-def process_llm_response(state: HtsClassifyAgentState):
-    determine_chapter_response = state.get("determine_chapter_llm_response")
-
-    main_chapter = determine_chapter_response.main_chapter
-    alternative_chapters = determine_chapter_response.alternative_chapters
-    fail_reason = determine_chapter_response.reason
-
-    if main_chapter:
-        final_alternative_chapters = [
-            chapter.model_dump() for chapter in (alternative_chapters if alternative_chapters else [])
-        ]
-
-        return {
-            "determine_chapter_success": True,
-            "main_chapter": determine_chapter_response.main_chapter.model_dump(),
-            "alternative_chapters": final_alternative_chapters
-        }
-    # TODO 改写失败直接先抛出异常
-    raise Exception(fail_reason)
+async def process_llm_response(state: HtsClassifyAgentState):
+    return await determine_chapter_service.process_llm_response(state.get("determine_chapter_llm_response"))
 
 
 @safe_raise_exception_node(logger=logger, ignore_exception=True)

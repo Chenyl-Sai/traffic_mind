@@ -28,8 +28,11 @@ class ItemRewriteResponse(BaseModel):
     cn_name: str | None = Field(title="商品中文名称",
                              description="直接翻译输入的商品名称，如果输入是中文，则不翻译，直接返回原始数据",
                              default=None)
-    classification_name: str | None = Field(title="商品归类名称",
+    classification_name_cn: str | None = Field(title="商品归类名称",
                              description="简短的归类名称，比如各种纸轴棉签、木轴棉签、竹制棉签等等，简短归类到棉签",
+                             default=None)
+    classification_name_en: str | None = Field(title="商品归类英文名称",
+                             description="简短的归类英文名称",
                              default=None)
     brand: str | None = Field(title="商品品牌", description="如有提及或可通过品类推断", default='无品牌')
     materials: str | None = Field(title="商品材质", description="主要材料及占比，如80%棉+20%聚酯纤维", default=None)
@@ -141,5 +144,5 @@ class GenerateFinalOutputResponse(BaseModel):
     """
     最终生成的输出结果
     """
-    rate_line_code: str = Field(title="税率线编码", description="根据历史消息，总结输出最终确定的税率编码")
-    final_output_reason: str = Field(title="生成最终输出的原因", description="根据历史消息，总结最终选择此税率线的原因")
+    rate_line_code: str = Field(title="税率线编码", description="总结输出最终确定的税率编码")
+    final_output_reason: str = Field(title="生成最终输出的原因", description="总结最终选择此税率线的原因,1800字以内")

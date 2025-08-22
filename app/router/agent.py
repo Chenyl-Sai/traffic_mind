@@ -2,7 +2,6 @@ from fastapi import APIRouter, Request, Body
 from fastapi.params import Header
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage
-from langgraph.graph import END
 from langgraph.types import Command
 from langgraph.graph.state import CompiledStateGraph
 
@@ -10,7 +9,7 @@ from typing_extensions import Annotated
 import json
 
 from app.agent.constants import HtsAgents, RewriteItemNodes, RetrieveDocumentsNodes, DetermineChapterNodes, \
-    DetermineHeadingNodes, DetermineSubheadingNodes, DetermineRateLineNodes, GenerateFinalOutputNodes
+    DetermineHeadingNodes, DetermineSubheadingNodes, DetermineRateLineNodes, GenerateFinalOutputNodes, SupervisorNodes
 from app.schema.ask_response import SSEResponse, SSEMessageTypeEnum
 from app.util.json_utils import pydantic_to_dict
 
@@ -51,17 +50,11 @@ async def sse_generator(stream):
                             message="需人工介入\n",
                             interrupt_reason=interrupt_value.get("interrupt_reason"),
                             expect_fields=interrupt_value.get("need_other_messages")))
-                else:
+                elif update_data:
                     error_message = update_data.get("unexpected_error_message")
                     if error_message:
                         yield format_response(SSEMessageTypeEnum.ERROR, SSEResponse(
                             message=f"{error_message}\n"))
-                    else:
-                        next_agent = update_data.get("next_agent", "")
-                        if next_agent:
-                            if next_agent == END:
-                                yield format_response(SSEMessageTypeEnum.FINAL, SSEResponse(
-                                    message=f"{update_data.get("final_output")}\n"))
         else:
             sub_graph_name = path[0].split(":")[0]
             # 商品重写节点
@@ -74,9 +67,9 @@ async def sse_generator(stream):
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在进行商品重写...\n"))
                     elif node == RewriteItemNodes.PROCESS_LLM_RESPONSE or (
-                        node == RewriteItemNodes.GET_REWRITE_ITEM_FROM_CACHE
-                        and
-                        update_data.get("hit_rewrite_cache")
+                            node == RewriteItemNodes.GET_REWRITE_ITEM_FROM_CACHE
+                            and
+                            update_data.get("hit_rewrite_cache")
                     ):
                         rewrite_success = update_data.get("rewrite_success")
                         if rewrite_success:
@@ -85,6 +78,12 @@ async def sse_generator(stream):
                         # elif rewrite_success != None:
                         #     yield format_response(SSEMessageTypeEnum.FINAL, SSEResponse(
                         #         message=f"请输入正确的商品信息\n"))
+                    elif node == RewriteItemNodes.GET_SIMIL_E2E_CACHE:
+                        hit_e2e_simil_cache = update_data.get("hit_e2e_simil_cache") if update_data else False
+                        if hit_e2e_simil_cache:
+                            yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
+                                message=f"HTS编码:{update_data.get('final_rate_line_code')}\n"
+                                        f"{update_data.get('final_description')}\n"))
             # 文档检索节点
             if sub_graph_name == HtsAgents.RETRIEVE_DOCUMENTS.code:
                 for node, update_data in updates.items():
@@ -94,7 +93,7 @@ async def sse_generator(stream):
                     elif node == RetrieveDocumentsNodes.ENTER_RETRIEVE_DOCUMENTS:
                         document_type = update_data.get("current_document_type")
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
-                            message=f"正在获取{document_type}相关信息...\n"))
+                            message=f"正在获取{document_type.name}相关信息...\n"))
             # 章节确定节点
             if sub_graph_name == HtsAgents.DETERMINE_CHAPTER.code:
                 for node, update_data in updates.items():
@@ -208,10 +207,10 @@ async def sse_generator(stream):
                     elif node == GenerateFinalOutputNodes.ENTER_GENERATE_FINAL_OUTPUT:
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在生成最终输出...\n"))
-                    elif node == GenerateFinalOutputNodes.ASK_LLM_TO_GENERATE_FINAL_OUTPUT:
+                    elif node == GenerateFinalOutputNodes.PROCESS_LLM_RESPONSE:
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
-                            message=f"HTS编码:{update_data.get('final_output').get('rate_line_code')}\n"
-                                    f"{update_data.get('final_output').get('final_output_reason')}\n"))
+                            message=f"HTS编码:{update_data.get('final_rate_line_code')}\n"
+                                    f"{update_data.get('final_description')}\n"))
 
 
 def format_response(message_type: SSEMessageTypeEnum, sse_response: SSEResponse) -> str:

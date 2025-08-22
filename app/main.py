@@ -10,8 +10,8 @@ from app.core.middleware import init_middleware
 from app.dep.db import init_db
 from contextlib import asynccontextmanager
 
-from app.dep.llm import get_chapter_vector_store
-from app.init.embeddings_init import build_vector_store
+from app.dep.llm import get_vector_store
+from app.init.embeddings_init import build_chapter_vector_store, build_heading_vector_store
 from app.router.agent import agent_router
 from app.router.schedule import schedule_router
 from app.router.vectorstore import vector_store_router
@@ -29,7 +29,8 @@ async def lifespan(app: FastAPI):
     async with await anext(get_async_session()) as session:
         await init_db(session)
         await session.close()
-        await build_vector_store(session, get_chapter_vector_store())
+        await build_chapter_vector_store(session, get_vector_store())
+        await build_heading_vector_store(session, get_vector_store())
 
     # 初始化opensearch索引
     init_indices(app)

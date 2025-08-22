@@ -8,6 +8,7 @@ class IndexName(str, Enum):
     HEADING_CLASSIFY = "traffic_mind_heading_classify"
     SUBHEADING_CLASSIFY = "traffic_mind_subheading_classify"
     RATE_LINE_CLASSIFY = "traffic_mind_rate_line_classify"
+    CLASSIFY_E2E_CACHE = "traffic_mind_classify_e2e"
 
     EVALUATE_RETRIEVE_CHAPTER = "evaluate_traffic_mind_retrieve_chapter"
     EVALUATE_LLM_CONFIRM_CHAPTER = "evaluate_traffic_mind_llm_confirm_chapter"

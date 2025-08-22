@@ -41,6 +41,29 @@ class DetermineChapterService:
 
         return human_message, output, parser.parse(output.content)
 
+    async def process_llm_response(self, llm_response: ChapterDetermineResponse):
+        main_chapter = llm_response.main_chapter
+        alternative_chapters = llm_response.alternative_chapters
+        fail_reason = llm_response.reason
+
+        if main_chapter:
+            final_alternative_chapters = [
+                chapter.model_dump() for chapter in (alternative_chapters if alternative_chapters else [])
+            ]
+            # # 由于分类中存在一些类似96章这种兜底的，语义模糊的章节，容易被rag和llm过滤掉，将这些模糊章节强制添加到候选中
+            # exists_codes = ([main_chapter.chapter_code] +
+            #                 [alternative_chapter.chapter_code for alternative_chapter in
+            #                  (alternative_chapters if alternative_chapters else [])])
+            # white_list_codes = []
+
+            return {
+                "determine_chapter_success": True,
+                "main_chapter": main_chapter.model_dump(),
+                "alternative_chapters": final_alternative_chapters
+            }
+        # TODO 失败直接先抛出异常
+        raise Exception(fail_reason)
+
     async def save_exact_cache(self, origin_item: str, sorted_chapter_codes: list[str], rag_version: str,
                                main_chapter: dict,
                                alternative_chapters: list[dict] | None):

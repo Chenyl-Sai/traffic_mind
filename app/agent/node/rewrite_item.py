@@ -41,7 +41,7 @@ async def get_from_cache_node(state: HtsClassifyAgentState):
         else:
             return {"hit_rewrite_cache": True, "rewrite_success": False}
     return {"hit_rewrite_cache": False,
-            "current_output_message": OutputMessage(type="message", message="为获取到商品重写缓存...")}
+            "current_output_message": OutputMessage(type="message", message="未获取到商品重写缓存...")}
 
 
 @safe_raise_exception_node(logger=logger)

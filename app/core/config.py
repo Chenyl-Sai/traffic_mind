@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     VECTOR_STORE_INDEX_DIR: str
     VECTOR_STORE_INDEX_NAME: str
 
+    # milvus
+    MILVUS_URI: str
+
     OPEN_SEARCH_HOSTS: list[str]
     OPEN_SEARCH_USERNAME: str
     OPEN_SEARCH_PASSWORD: str

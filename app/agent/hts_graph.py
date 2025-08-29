@@ -36,7 +36,7 @@ async def agent_router(state: HtsClassifyAgentState):
     # 如果有异常了，直接就结束了
     error = state.get("unexpected_error")
     if error:
-        return Command(update={"unexpected_error_message": str(error)},
+        return Command(update={"unexpected_error_message": "系统繁忙，请稍后重试"},
                        goto=END)
     # 刚进来，先重写商品
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.SUPERVISOR.code:

@@ -19,3 +19,9 @@ class IndexName(str, Enum):
 
 class RedisKeyPrefix(str, Enum):
     REWRITTEN_ITEM_EMBEDDINGS = "rewritten_item_embeddings"
+
+
+class MilvusCollectionName(str, Enum):
+    KNOWLEDGE_CHAPTER = "hts_knowledge_chapter"
+    KNOWLEDGE_HEADING = "hts_knowledge_heading"
+    CACHE_E2E = "hts_cache_e2e"

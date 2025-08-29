@@ -11,12 +11,12 @@ from app.agent.constants import RetrieveDocumentsNodes, DocumentTypes
 from app.agent.state import HtsClassifyAgentState, state_has_error
 from app.agent.constants import HtsAgents
 from app.agent.util.exception_handler import safe_raise_exception_node
-from app.dep.llm import get_vector_store
+from app.core.milvus import get_async_milvus_client
 from app.service.retrieve_documents_service import RetrieveDocumentsService
 
 logger = logging.getLogger(__name__)
 
-retrieve_service = RetrieveDocumentsService(vectorstore=get_vector_store())
+retrieve_service = RetrieveDocumentsService(async_milvus_client=get_async_milvus_client())
 
 
 def start_retrieve_documents(state: HtsClassifyAgentState):

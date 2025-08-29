@@ -69,7 +69,7 @@ async def sse_generator(stream):
                     elif node == RewriteItemNodes.PROCESS_LLM_RESPONSE or (
                             node == RewriteItemNodes.GET_REWRITE_ITEM_FROM_CACHE
                             and
-                            update_data.get("hit_rewrite_cache")
+                            update_data and update_data.get("hit_rewrite_cache")
                     ):
                         rewrite_success = update_data.get("rewrite_success")
                         if rewrite_success:

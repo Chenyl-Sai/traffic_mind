@@ -1,32 +1,41 @@
 import json
 
 from datetime import datetime, timezone
+from pymilvus import AsyncMilvusClient
 
 from app.db.session import AsyncSessionLocal
-from app.service.vector_store_service import FAISSVectorStore
 from app.core.opensearch import get_async_opensearch_client
-from app.core.constants import IndexName
+from app.core.constants import IndexName, MilvusCollectionName
 from app.service.wco_hs_service import get_heading_detail_by_chapter_codes, get_subheading_detail_by_heading_codes, \
-    get_subheading_dict_by_subheading_codes, get_headings_by_heading_codes, get_chapters_by_chapter_codes
+    get_subheading_dict_by_subheading_codes, get_chapters_by_chapter_codes
 from app.service.hts_service import get_rate_lines_by_wco_subheadings
 
 
 class RetrieveDocumentsService:
 
-    def __init__(self, vectorstore: FAISSVectorStore):
-        self.vectorstore = vectorstore
+    def __init__(self, async_milvus_client: AsyncMilvusClient):
+        self.async_milvus_client = async_milvus_client
 
     async def retrieve_chapter_documents(self, rewritten_item: dict):
         """
         从向量数据库中检索相关章节
         """
         query_text = json.dumps(rewritten_item)
-        chapter_documents = await self.vectorstore.search(query_text=query_text,
-                                                          search_type="similarity",
-                                                          filter={"type": "chapter"},
-                                                          k=10)
-        chapters = [document.page_content for document in chapter_documents] if chapter_documents else []
-        chapter_codes = [json.loads(chapter).get("chapter_code") for chapter in chapters]
+        response = await self.async_milvus_client.search(collection_name=MilvusCollectionName.KNOWLEDGE_CHAPTER.value,
+                                                         data=[query_text],
+                                                         limit=10,
+                                                         output_fields=['chapter_code', 'content'])
+        chapters = []
+        chapter_codes = []
+        for hits in response:
+            for hit in hits:
+                content = hit["entity"]["content"]
+                chapter_code = hit["entity"]["chapter_code"]
+
+                content_dict = json.loads(content)
+                content_dict["chapter_code"] = chapter_code
+                chapters.append(json.dumps(content_dict))
+                chapter_codes.append(chapter_code)
         return chapters, chapter_codes
 
     async def save_chapter_retrieve_evaluation(self, evaluate_version: str, origin_item_name: str, rewritten_item: dict,
@@ -50,20 +59,27 @@ class RetrieveDocumentsService:
         chapter_detail_dict = await get_heading_detail_by_chapter_codes(chapter_codes)
         # 增加根据语义相似度获取到的heading信息
         query_text = json.dumps(rewritten_item)
-        heading_documents = await self.vectorstore.search(query_text=query_text,
-                                                          search_type="similarity",
-                                                          filter={"type": "heading"},
-                                                          k=10,
-                                                          fetch_k=100)
-        simil_heading_chapter_codes = [heading_document.metadata.get("chapter_code") for heading_document in
-                                       heading_documents]
+        response = await self.async_milvus_client.search(collection_name=MilvusCollectionName.KNOWLEDGE_HEADING.value,
+                                                         data=[query_text],
+                                                         limit=10,
+                                                         output_fields=["heading_code",
+                                                                        "heading_title",
+                                                                        "chapter_code"])
+        heading_documents = []
+        simil_heading_chapter_codes = []
+        for hits in response:
+            for hit in hits:
+                heading_documents.append({"heading_code": hit["entity"]["heading_code"],
+                                          "heading_title": hit["entity"]["chapter_code"],
+                                          "chapter_code": hit["entity"]["chapter_code"]})
+                simil_heading_chapter_codes.append(hit["entity"]["chapter_code"])
+
         async with AsyncSessionLocal() as session:
             simil_chapters = await get_chapters_by_chapter_codes(session, simil_heading_chapter_codes)
             simil_chapter_key_dict = {chapter.chapter_code: (chapter.chapter_code + ":" + chapter.chapter_title)
                                       for chapter in simil_chapters}
-            for heading_document in heading_documents:
-                heading = json.loads(heading_document.page_content)
-                chapter_key = simil_chapter_key_dict.get(heading_document.metadata.get("chapter_code"))
+            for heading in heading_documents:
+                chapter_key = simil_chapter_key_dict.get(heading.get("chapter_code"))
                 if chapter_key in chapter_detail_dict:
                     exists_heading = next((chapter_detail for chapter_detail in chapter_detail_dict.get(chapter_key) if
                                            chapter_detail.get("heading_code") == heading.get("heading_code")), None)

@@ -407,27 +407,30 @@ async def get_rate_lines_by_wco_subheadings(subheadings: list[str]):
             parent_id = rate_line.parent_id
             # 如果上级为空，则直接将当前RateLine添加到插槽中
             if not parent_id:
-                subheading_detail.append({"rate_line_code": rate_line.rate_line_code,
-                          "rate_line_description": rate_line.rate_line_description})
-            # 如果有上级，获取上级，查看上级是否是说明信息
-            while parent_id:
-                if parent_id not in parent_cache:
-                    parent = await select_rate_line_by_id(session, parent_id)
-                    logger.info(f"parent_id: {parent_id},  parent's parent_id: {parent.parent_id}")
-                    parent_cache.update({parent_id: parent})
-                else:
-                    parent = parent_cache.get(parent_id)
-                if not parent.is_superior:
-                    break
-                parent_id = parent.parent_id
-
-            # 从最上层parent_id构建整个树，然后添加到插槽中
-            if parent_id in top_level_group_id_set:
-                # 按最上层的来看，已经存在了就直接跳过，不重复添加到插槽中
-                continue
+                subheading_detail.append({
+                    "rate_line_code": rate_line.rate_line_code,
+                    "rate_line_description": rate_line.rate_line_description
+                })
             else:
-                subheading_detail.append(await construct_rate_line_tree(session, parent_id))
-                top_level_group_id_set.add(parent_id)
+                # 如果有上级，获取上级，查看上级是否是说明信息
+                while parent_id:
+                    if parent_id not in parent_cache:
+                        parent = await select_rate_line_by_id(session, parent_id)
+                        logger.info(f"parent_id: {parent_id},  parent's parent_id: {parent.parent_id}")
+                        parent_cache.update({parent_id: parent})
+                    else:
+                        parent = parent_cache.get(parent_id)
+                    if not parent.is_superior:
+                        break
+                    parent_id = parent.parent_id
+
+                # 从最上层parent_id构建整个树，然后添加到插槽中
+                if parent_id in top_level_group_id_set:
+                    # 按最上层的来看，已经存在了就直接跳过，不重复添加到插槽中
+                    continue
+                else:
+                    subheading_detail.append(await construct_rate_line_tree(session, parent_id))
+                    top_level_group_id_set.add(parent_id)
 
     return subheading_detail_dict
 

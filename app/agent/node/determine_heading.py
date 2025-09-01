@@ -91,7 +91,8 @@ async def save_llm_confirm_heading_for_evaluation(state: HtsClassifyAgentState, 
         await determine_heading_service.save_for_evaluation(evaluate_version=evaluate_version,
                                                             origin_item_name=state.get("item"),
                                                             heading_documents=state.get("heading_documents"),
-                                                            llm_response=state.get("determine_heading_llm_response"))
+                                                            llm_response=state.get("determine_heading_llm_response"),
+                                                            actual_heading=config["configurable"].get("hscode", "")[:4])
 
 
 def after_get_cache_edge(state: HtsClassifyAgentState):

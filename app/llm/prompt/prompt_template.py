@@ -1,33 +1,41 @@
 expend_chapter_template = """
-You are an expert in HS (Harmonized System) code classification. Given an HS chapter heading, generate structured expansion details in JSON format.
+你是HS（协调制度）编码分类专家。给定一个HS章节标题，以JSON格式生成结构化的扩展详情。
 
 {format_instructions}
 
-Generate the expansion for the following HS chapter heading:
+为以下HS章节标题生成扩展内容：
 {title}"""
 
 
 rewrite_item_template = """
-You are an expert in international trade commodity classification. Your task is to **rewrite and enrich** user-provided product descriptions into structured, HS Code-friendly information by:
+您是国际贸易商品分类专家，您的任务是对用户提供的产品描述进行**重写与丰富**，将其转化为结构化、便于HS编码查询的规范表述。请遵循以下规则：
 
-1. Core Rewriting Rules
-    Standardize Terminology: Convert colloquial terms to formal product names (e.g., "Nike sneakers" → "athletic shoes").
-    Infer Missing Attributes: Fill in gaps logically:
-        Purpose: Deduce usage (e.g., "kitchen knife" → "household culinary use").
-        Material: Default to industry-common materials if unspecified (e.g., "water bottle" → "plastic/stainless steel").
-        Specifications: Add implied metrics (e.g., "LED bulb" → "voltage: 110V-240V").
-    Resolve Ambiguities: Request user clarification only if critical (e.g., "organic cotton shirt" with "waterproof coating" → ask if coated post-weaving).
-2. Priority Inferences
-    Material Hierarchy: List materials by dominance (e.g., "wool blend coat" → "70% wool, 30% polyester").
-    Electronics/Mechanics: Always infer power specs (e.g., "blender" → "AC motor, 500W").
-    Agricultural Goods: State processing level (e.g., "coffee beans" → "roasted, not decaffeinated").
-3. All information are written in english. 
-4. When the input content detection result is not a product, **do not return the need_other_messages field! Directly return rewrite_success as false!**
-    
-{format_instructions}
+1. **核心重写原则**
+    - 标准化术语：将口语化、非正式表达转换为正式商品名称（如“耐克运动鞋” → “运动鞋”）。
+    - 语义消歧：当输入存在多义性时，优先理解为商品名称（如“float”应理解为“浮漂”而非“漂浮”）。
+    - 商品推断：基于电商销售场景，结合常见商品信息推断其实际用途。
+    - 补充隐含属性（通过合理推断）：
+        - 用途：明确使用场景（如“厨房刀” → “家用烹饪用途”）。
+        - 材料：若未指明，按行业通用材料补充（如“水瓶” → “塑料/不锈钢”）。
+        - 规格：添加常见物理或电气指标（如“LED灯泡” → “电压：110V–240V”）。
 
-Here is the product description:
-{item}
+2. **优先级补充说明**
+    - 材料构成：如涉及混合材质，应具体说明比例（如“羊毛混纺外套” → “70%羊毛，30%聚酯纤维”）。
+    - 机电产品：需补充功率等关键参数（如“搅拌机” → “交流电动机，500W”）。
+
+3. **输出语言**
+    - 请全程使用中文进行回答。
+
+4. **重要注意事项**
+    - 如根据输入判断明确的不是物品，则直接设置 rewrite_success 为 false，其他情况即使输入是较大范围的概念(如照片、钢铁、饮料等等)、即使无法推断出其他任何属性，只要输入可以理解为物品，永远不返回失败。
+
+5. **数据结构**
+
+   {format_instructions}
+
+6. **用户输入**
+
+    {item}
 """
 
 

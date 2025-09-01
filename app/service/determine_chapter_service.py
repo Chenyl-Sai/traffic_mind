@@ -183,7 +183,8 @@ class DetermineChapterService:
                                                      origin_item: str,
                                                      rewritten_item: dict,
                                                      retrieved_chapter_codes: list[str],
-                                                     llm_response: ChapterDetermineResponse):
+                                                     llm_response: ChapterDetermineResponse,
+                                                     actual_chapter: str):
         """
         保存章节确认结果用于评估
         """
@@ -193,6 +194,7 @@ class DetermineChapterService:
             "rewritten_item": rewritten_item,
             "retrieved_chapter_codes": retrieved_chapter_codes,
             "llm_response": llm_response.model_dump(),
+            "actual_chapter": actual_chapter,
             "created_at": datetime.now(timezone.utc),
         }
         async with get_async_opensearch_client() as async_client:

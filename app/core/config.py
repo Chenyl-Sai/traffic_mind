@@ -58,6 +58,8 @@ class Settings(BaseSettings):
 
     DASHSCOPE_API_KEY: str
 
+    DEEPSEEK_API_KEY: str
+
     VECTOR_STORE_INDEX_DIR: str
     VECTOR_STORE_INDEX_NAME: str
 

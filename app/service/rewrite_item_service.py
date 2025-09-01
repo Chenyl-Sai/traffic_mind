@@ -21,9 +21,10 @@ import json
 
 class ItemRewriteCacheService:
 
-    def __init__(self, embeddings: Embeddings, llm: BaseChatModel, ):
+    def __init__(self, embeddings: Embeddings, llm: BaseChatModel, backup_llm: BaseChatModel ):
         self.embeddings = embeddings
         self.llm = llm
+        self.backup_llm = backup_llm
 
 
     async def get_from_cache(self, item:str):
@@ -136,7 +137,14 @@ class ItemRewriteCacheService:
 
         output = await self.llm.ainvoke(input=[human_message])
 
-        return human_message, output, parser.parse(output.content)
+        rewrite_result: ItemRewriteResponse = parser.parse(output.content)
+
+        # 如果改写失败了，使用备选llm重试一下
+        if self.backup_llm and rewrite_result.rewrite_success == False:
+            output = await self.backup_llm.ainvoke(input=[human_message])
+            rewrite_result = parser.parse(output.content)
+
+        return human_message, output, rewrite_result
 
 
 

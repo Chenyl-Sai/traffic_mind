@@ -12,14 +12,16 @@ from langgraph.graph import START, StateGraph, END
 from app.agent.node.final_output import final_output_service
 from app.agent.state import HtsClassifyAgentState, OutputMessage
 from app.agent.util.exception_handler import safe_raise_exception_node
-from app.core.llm import base_qwen_llm
+from app.core.llm import base_qwen_llm, deep_seek_llm
 from app.llm.embedding.qwen import default_qwen_embeddings
 from app.agent.constants import HtsAgents, RewriteItemNodes
 from app.service.rewrite_item_service import ItemRewriteCacheService
 
 logger = logging.getLogger(__name__)
 
-item_rewrite_cache_service = ItemRewriteCacheService(embeddings=default_qwen_embeddings, llm=base_qwen_llm)
+item_rewrite_cache_service = ItemRewriteCacheService(embeddings=default_qwen_embeddings,
+                                                     llm=base_qwen_llm,
+                                                     backup_llm=deep_seek_llm)
 
 
 def start_rewrite_node(state: HtsClassifyAgentState):
@@ -66,17 +68,16 @@ def process_llm_response_node(state: HtsClassifyAgentState):
     if rewrite_response.rewrite_success:
         rewritten_item = rewrite_response.model_dump()
         del (rewritten_item["rewrite_success"])
-        del (rewritten_item["need_other_messages"])
         # 返回重写后的信息
         return {"rewrite_success": True, "rewritten_item": rewritten_item,
                 "current_output_message": OutputMessage(type="message", message="LLM改写商品成功...")}
-    elif rewrite_response.need_other_messages:
-        # 需要用户补充关键信息，流程变成人工介入
-        additional_messages = interrupt({
-            "need_other_messages": rewrite_response.need_other_messages
-        })
-        # 用户补充完成后，将补充信息添加到item中，重新再调用llm获取重写的商品信息
-        return {"item": state.get("item") + "\n" + additional_messages}
+    # elif rewrite_response.need_other_messages:
+    #     # 需要用户补充关键信息，流程变成人工介入
+    #     additional_messages = interrupt({
+    #         "need_other_messages": rewrite_response.need_other_messages
+    #     })
+    #     # 用户补充完成后，将补充信息添加到item中，重新再调用llm获取重写的商品信息
+    #     return {"item": state.get("item") + "\n" + additional_messages}
     else:
         # 重写失败，流程结束
         return {"rewrite_success": False,
@@ -113,7 +114,9 @@ async def get_simil_e2e_cache(state: HtsClassifyAgentState, config):
     is_for_evaluation = config["configurable"].get("is_for_evaluation", False)
     if is_for_evaluation:
         return {"hit_e2e_simil_cache": False}
-    return await final_output_service.get_e2e_simil_cache(state.get("rewritten_item"))
+    if state.get("rewrite_success"):
+        return await final_output_service.get_e2e_simil_cache(state.get("rewritten_item"))
+    return {"hit_e2e_simil_cache": False}
 
 
 def after_query_cache_edge(state: HtsClassifyAgentState):

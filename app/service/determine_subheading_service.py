@@ -101,7 +101,7 @@ class DetermineSubheadingService:
             return {"hit_subheading_cache": False}
 
     async def save_for_evaluation(self, evaluate_version: str, origin_item_name: str, subheading_documents: str,
-                                  llm_response: SubheadingDetermineResponse):
+                                  llm_response: SubheadingDetermineResponse, actual_subheading: str):
         """
         保存用于评估的信息
         """
@@ -110,6 +110,7 @@ class DetermineSubheadingService:
             "origin_item_name": origin_item_name,
             "subheading_documents": subheading_documents,
             "llm_response": llm_response.model_dump(),
+            "actual_subheading": actual_subheading,
             "created_at": datetime.now(timezone.utc)
         }
         async with get_async_opensearch_client() as async_client:

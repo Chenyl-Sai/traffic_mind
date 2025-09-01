@@ -95,7 +95,9 @@ async def save_llm_confirm_result_for_evaluation(state: HtsClassifyAgentState, c
         await determine_chapter_service.save_llm_confirm_result_for_evaluation(
             evaluate_version=evaluate_version, origin_item=state.get("item"),
             rewritten_item=state.get("rewritten_item"),
-            retrieved_chapter_codes=chapter_codes, llm_response=state.get("determine_chapter_llm_response")
+            retrieved_chapter_codes=chapter_codes,
+            llm_response=state.get("determine_chapter_llm_response"),
+            actual_chapter=config["configurable"].get("hscode", "")[:2]
         )
     return {}
 

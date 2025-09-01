@@ -39,13 +39,14 @@ class RetrieveDocumentsService:
         return chapters, chapter_codes
 
     async def save_chapter_retrieve_evaluation(self, evaluate_version: str, origin_item_name: str, rewritten_item: dict,
-                                               chapter_documents: list[dict]):
+                                               chapter_documents: list[dict], actual_chapter: str):
         # 保存一下获取的chapter信息用于评估准确性
         document = {
             "evaluate_version": evaluate_version,
             "origin_item_name": origin_item_name,
             "rewritten_item": rewritten_item,
             "chapter_documents": chapter_documents,
+            "actual_chapter": actual_chapter,
             "created_at": datetime.now(timezone.utc),
         }
         async with get_async_opensearch_client() as async_client:
@@ -114,6 +115,8 @@ class RetrieveDocumentsService:
         """
         sub_heading_tree = await get_subheading_dict_by_subheading_codes(subheading_codes)
         sub_heading_detail_dict = await get_rate_lines_by_wco_subheadings(subheading_codes)
+        print(sub_heading_tree)
+        print(sub_heading_detail_dict)
         candidate_rate_line_codes = {}
         for chapter_key, chapter_details in sub_heading_tree.items():
             for heading_key, heading_details in chapter_details.items():
@@ -122,18 +125,20 @@ class RetrieveDocumentsService:
                     subheading_details = sub_heading_detail_dict.get(subheading_code)
                     heading_details.update({subheading_key: subheading_details})
                     codes = []
+                    print(subheading_code)
                     self.get_rate_line_codes(subheading_details, codes)
                     candidate_rate_line_codes[subheading_code] = codes
         return json.dumps(sub_heading_tree, ensure_ascii=False), candidate_rate_line_codes
 
     def get_rate_line_codes(self, subheading_details: list, codes: []):
-        for subheading_detail in subheading_details:
-            # 叶子节点：包含 rate_line_code
-            if isinstance(subheading_detail, dict) and "rate_line_code" in subheading_detail:
-                codes.append(subheading_detail["rate_line_code"])
+        if subheading_details:
+            for subheading_detail in subheading_details:
+                # 叶子节点：包含 rate_line_code
+                if isinstance(subheading_detail, dict) and "rate_line_code" in subheading_detail:
+                    codes.append(subheading_detail["rate_line_code"])
 
-            # 分组节点：key 是描述字符串，value 是子列表
-            elif isinstance(subheading_detail, dict):
-                for key, value in subheading_detail.items():
-                    if isinstance(value, list):
-                        self.get_rate_line_codes(value, codes)
+                # 分组节点：key 是描述字符串，value 是子列表
+                elif isinstance(subheading_detail, dict):
+                    for key, value in subheading_detail.items():
+                        if isinstance(value, list):
+                            self.get_rate_line_codes(value, codes)

@@ -1,11 +1,15 @@
+import uuid
 from typing import Annotated
+import pandas as pd
+import asyncio
 
 from fastapi import APIRouter, Request, Header
 from fastapi.params import Header
 
 from langgraph.graph.state import CompiledStateGraph
 
-from app.service.evaluation_service import get_hts_classify_evaluation_result
+from app.service.evaluation_service import get_hts_classify_evaluation_result, do_batch_hts_classify_evaluation
+
 evaluation_router = APIRouter()
 
 
@@ -26,7 +30,12 @@ async def hts_classify_evaluation(request: Request,
     return result
 
 
-@evaluation_router.get("hts_classify_result")
+@evaluation_router.post("/batch_hts_classify")
+async def batch_hts_classify_evaluation(request: Request, evaluate_version: str, evaluate_count: int = 100):
+    await do_batch_hts_classify_evaluation(request, evaluate_version, evaluate_count)
+    return "success"
+
+@evaluation_router.get("/hts_classify_result")
 async def hts_classify_evaluation_result(evaluate_version: str):
     """
     获取商品分类评估结果

@@ -83,7 +83,8 @@ async def save_for_evaluation(state: HtsClassifyAgentState, config):
             evaluate_version=evaluate_version,
             origin_item_name=state.get("item"),
             subheading_documents=state.get("subheading_documents"),
-            llm_response=state.get("determine_subheading_llm_response")
+            llm_response=state.get("determine_subheading_llm_response"),
+            actual_subheading=config["configurable"].get("hscode", "")[:6]
         )
     return {}
 
@@ -101,6 +102,7 @@ def after_llm_response_edge(state: HtsClassifyAgentState):
     else:
         return [DetermineSubheadingNodes.SAVE_LLM_RESPONSE_FOR_EVALUATION,
                 DetermineSubheadingNodes.PROCESS_LLM_RESPONSE]
+
 
 def after_process_llm_response(state: HtsClassifyAgentState, config):
     # 如果是评估请求，则禁写缓存

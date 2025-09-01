@@ -102,7 +102,8 @@ class DetermineHeadingService:
                                   evaluate_version: str,
                                   origin_item_name: str,
                                   heading_documents: str,
-                                  llm_response: HeadingDetermineResponse):
+                                  llm_response: HeadingDetermineResponse,
+                                  actual_heading: str):
         """
         保存评估过程信息
         """
@@ -111,6 +112,7 @@ class DetermineHeadingService:
             "origin_item_name": origin_item_name,
             "heading_documents": heading_documents,
             "llm_response": llm_response.model_dump(),
+            "actual_heading": actual_heading,
             "created_at": datetime.now(timezone.utc),
         }
         async with get_async_opensearch_client() as async_client:

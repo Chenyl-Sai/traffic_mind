@@ -77,7 +77,8 @@ async def save_retrieve_result_for_evaluation(state: HtsClassifyAgentState, conf
                 evaluate_version,
                 origin_item_name=state.get("item"),
                 rewritten_item=state.get("rewritten_item"),
-                chapter_documents=documents_dict_list
+                chapter_documents=documents_dict_list,
+                actual_chapter=config["configurable"].get("hscode", "")[:2]
             )
     return {}
 

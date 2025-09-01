@@ -18,15 +18,15 @@ class ItemRewriteResponse(BaseModel):
     商品重写结果
     """
     rewrite_success: bool = Field(title="重写成功与否",
-                                  description="商品重写成功与否, **如果输入的内容中不包含正确的商品信息，则直接返回重写失败，不要返回need_other_messages**")
+                                  description="商品重写成功与否, 只有在输入不是物品时才返回false，其他情况返回true")
     name: str | None = Field(title="商品名称",
-                             description="核心产品类型，必需项，如果不是字符串自动改写成字符串，如未提取到则重写失败",
+                             description="商品名称，如果不是字符串自动改写成字符串，如未提取到则重写失败，除非改写失败，否则必须返回",
                              default=None)
     en_name: str | None = Field(title="商品英文名称",
-                             description="直接翻译输入的商品名称，如果输入是英文，则不翻译，直接返回原始数据",
+                             description="直接翻译输入的商品名称为中文，如果输入是英文，则不翻译，直接返回原始数据，除非改写失败，否则必须返回",
                              default=None)
     cn_name: str | None = Field(title="商品中文名称",
-                             description="直接翻译输入的商品名称，如果输入是中文，则不翻译，直接返回原始数据",
+                             description="直接翻译输入的商品名称为中文，如果输入是中文，则不翻译，直接返回原始数据，除非改写失败，否则必须返回",
                              default=None)
     classification_name_cn: str | None = Field(title="商品归类名称",
                              description="简短的归类名称，比如各种纸轴棉签、木轴棉签、竹制棉签等等，简短归类到棉签",
@@ -36,15 +36,12 @@ class ItemRewriteResponse(BaseModel):
                              default=None)
     brand: str | None = Field(title="商品品牌", description="如有提及或可通过品类推断", default='无品牌')
     materials: str | None = Field(title="商品材质", description="主要材料及占比，如80%棉+20%聚酯纤维", default=None)
-    purpose: str | None = Field(title="商品用途", description="消费场景/功能，如家用，工业用，宠物用等", default=None)
+    purpose: str | None = Field(title="商品用途", description="消费场景/功能，如家用，工业用，宠物用，医用等", default=None)
     specifications: str | None = Field(title="商品规格", description="尺寸/重量/容量/功率等物理特性", default=None)
     processing_state: str | None = Field(title="加工状态", description="是否组装、是否为半成品、加工工艺等", default=None)
     special_properties: str | None = Field(title="特殊属性", description="是否带电、是否含有液体、是否可食用等",
                                            default=None)
     other_notes: str | None = Field(title="其他说明", description="任何其他可能影响分类的有用信息", default=None)
-    need_other_messages: list[str] | None = Field(title="需要补充的其他消息字段列表",
-                                                  description="当重写失败时，仅当需要补充除name之外的关键分类信息时，才显示此字段，这里只显示需要补充的信息的字段名称，字段不超出此schema定义的范围，不要显示说明，这里最多显示2个必填的信息",
-                                                  default=None)
 
 
 class ChapterDetermineResponseDetail(BaseModel):

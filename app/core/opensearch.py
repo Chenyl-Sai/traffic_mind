@@ -387,6 +387,9 @@ def init_evaluate_retrieve_chapter_index():
                                 "chapter_code": {"type": "text"},
                             }
                         },
+                        "actual_chapter": {
+                            "type": "keyword"
+                        },
                         "created_at": {
                             "type": "date"
                         }
@@ -437,6 +440,9 @@ def init_evaluate_llm_confirm_chapter_index():
                                 "alternative_chapters": chapter_detail,
                                 "reason": {"type": "text"},
                             }
+                        },
+                        "actual_chapter": {
+                            "type": "keyword"
                         },
                         "created_at": {
                             "type": "date"
@@ -490,6 +496,9 @@ def init_evaluate_llm_confirm_heading_index():
                                 "reason": {"type": "text"},
                             }
                         },
+                        "actual_heading": {
+                            "type": "keyword"
+                        },
                         "created_at": {
                             "type": "date"
                         }
@@ -541,6 +550,9 @@ def init_evaluate_llm_confirm_subheading_index():
                                 "alternative_subheadings": subheading_detail,
                                 "reason": {"type": "text"},
                             }
+                        },
+                        "actual_subheading": {
+                            "type": "keyword"
                         },
                         "created_at": {
                             "type": "date"

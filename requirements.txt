@@ -24,3 +24,7 @@ faiss-cpu~=1.11.0.post1
 # elasticsearch~=9.1.0
 opensearch-py~=3.0.0
 redis~=6.4.0
+pymilvus~=2.6.0
+pandas~=2.3.2
+langchain_deepseek~=0.1.4
+httpx[socks]~=0.28.1

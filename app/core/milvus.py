@@ -39,6 +39,15 @@ def create_embedding_function(function_name: str, input_field_names: list[str], 
     )
 
 
+def create_sparse_embedding_function(function_name: str, input_field_names: list[str], output_field_names: list[str]):
+    return Function(
+        name=function_name,
+        function_type=FunctionType.BM25,
+        input_field_names=input_field_names,
+        output_field_names=output_field_names,
+    )
+
+
 async def create_chapter_knowledge_collection():
     knowledge_client = get_async_milvus_client()
     # 是否存在collection了
@@ -50,23 +59,28 @@ async def create_chapter_knowledge_collection():
         )
         schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
         schema.add_field(field_name="chapter_code", datatype=DataType.VARCHAR, max_length=10)
-        schema.add_field(field_name="chapter_title", datatype=DataType.VARCHAR, max_length=2000)
+        schema.add_field(field_name="chapter_title", datatype=DataType.VARCHAR, max_length=65535)
         schema.add_field(field_name="section_code", datatype=DataType.VARCHAR, max_length=10)
         schema.add_field(field_name="includes", datatype=DataType.ARRAY, element_type=DataType.VARCHAR,
                          max_length=65535, max_capacity=1000)
         schema.add_field(field_name="common_examples", datatype=DataType.ARRAY, element_type=DataType.VARCHAR,
                          max_length=65535, max_capacity=1000)
+        schema.add_field(field_name="content", datatype=DataType.VARCHAR, max_length=65535,
+                         analyzer_params={"tokenizer": "standard", "filter": ["lowercase"]},
+                         enable_match=True, enable_analyzer=True)
         schema.add_field(field_name="content_vector", datatype=DataType.FLOAT_VECTOR, dim=DEFAULT_EMBEDDINGS_DIMENSION)
-        schema.add_field(field_name="content", datatype=DataType.VARCHAR, max_length=65535)
+        schema.add_field(field_name="content_sparse_vector", datatype=DataType.SPARSE_FLOAT_VECTOR)
 
-        schema.add_function(
-            create_embedding_function(function_name="chapter_content_embedding", input_field_names=["content"],
-                                      output_field_names=["content_vector"]))
+        schema.add_function(create_sparse_embedding_function(function_name="chapter_content_sparse_embedding",
+                                                             input_field_names=["content"],
+                                                             output_field_names=["content_sparse_vector"]))
 
         # Create Index
         index_params = knowledge_client.prepare_index_params()
         index_params.add_index(field_name="content_vector", index_name="idx_vector", index_type="AUTOINDEX",
                                metric_type="COSINE")
+        index_params.add_index(field_name="content_sparse_vector", index_name="idx_sparse_vector",
+                               index_type="SPARSE_INVERTED_INDEX", metric_type="BM25")
 
         await knowledge_client.create_collection(
             collection_name=MilvusCollectionName.KNOWLEDGE_CHAPTER.value,
@@ -91,18 +105,31 @@ async def create_heading_knowledge_collection():
         )
         schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
         schema.add_field(field_name="heading_code", datatype=DataType.VARCHAR, max_length=10)
-        schema.add_field(field_name="heading_title", datatype=DataType.VARCHAR, max_length=2000)
+        schema.add_field(field_name="heading_title", datatype=DataType.VARCHAR, max_length=65535)
+        schema.add_field(field_name="heading_includes", datatype=DataType.ARRAY, element_type=DataType.VARCHAR,
+                         max_length=65535, max_capacity=1000)
+        schema.add_field(field_name="heading_common_examples", datatype=DataType.ARRAY, element_type=DataType.VARCHAR,
+                         max_length=65535, max_capacity=1000)
+        schema.add_field(field_name="heading_description", datatype=DataType.VARCHAR, max_length=65535,
+                         analyzer_params={"tokenizer": "standard", "filter": ["lowercase"]},
+                         enable_match=True, enable_analyzer=True)
+        schema.add_field(field_name="heading_description_vector", datatype=DataType.FLOAT_VECTOR,
+                         dim=DEFAULT_EMBEDDINGS_DIMENSION)
+        schema.add_field(field_name="heading_description_sparse_vector", datatype=DataType.SPARSE_FLOAT_VECTOR)
         schema.add_field(field_name="chapter_code", datatype=DataType.VARCHAR, max_length=10)
-        schema.add_field(field_name="title_vector", datatype=DataType.FLOAT_VECTOR, dim=DEFAULT_EMBEDDINGS_DIMENSION)
+        schema.add_field(field_name="chapter_title", datatype=DataType.VARCHAR, max_length=65535)
+        schema.add_field(field_name="chapter_description", datatype=DataType.VARCHAR, max_length=65535)
 
-        schema.add_function(
-            create_embedding_function(function_name="heading_title_embedding", input_field_names=["heading_title"],
-                                      output_field_names=["title_vector"]))
+        schema.add_function(create_sparse_embedding_function(function_name="heading_title_sparse_embedding",
+                                                             input_field_names=["heading_description"],
+                                                             output_field_names=["heading_description_sparse_vector"]))
 
         # Create Index
         index_params = knowledge_client.prepare_index_params()
-        index_params.add_index(field_name="title_vector", index_name="idx_vector", index_type="AUTOINDEX",
+        index_params.add_index(field_name="heading_description_vector", index_name="idx_vector", index_type="AUTOINDEX",
                                metric_type="COSINE")
+        index_params.add_index(field_name="heading_description_sparse_vector", index_name="idx_sparse_vector",
+                               index_type="SPARSE_INVERTED_INDEX", metric_type="BM25")
 
         await knowledge_client.create_collection(
             collection_name=MilvusCollectionName.KNOWLEDGE_HEADING.value,

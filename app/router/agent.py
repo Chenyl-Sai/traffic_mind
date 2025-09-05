@@ -8,7 +8,7 @@ from langgraph.graph.state import CompiledStateGraph
 from typing_extensions import Annotated
 import json
 
-from app.agent.constants import HtsAgents, RewriteItemNodes, RetrieveDocumentsNodes, DetermineChapterNodes, \
+from app.agent.constants import HtsAgents, RewriteItemNodes, RetrieveDocumentsNodes, \
     DetermineHeadingNodes, DetermineSubheadingNodes, DetermineRateLineNodes, GenerateFinalOutputNodes, SupervisorNodes
 from app.schema.ask_response import SSEResponse, SSEMessageTypeEnum
 from app.util.json_utils import pydantic_to_dict
@@ -94,35 +94,6 @@ async def sse_generator(stream):
                         document_type = update_data.get("current_document_type")
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在获取{document_type.name}相关信息...\n"))
-            # 章节确定节点
-            if sub_graph_name == HtsAgents.DETERMINE_CHAPTER.code:
-                for node, update_data in updates.items():
-                    if node == "__interrupt__":
-                        # 所有子图的中断信息都会pop到主图中，子图中不处理了
-                        continue
-                    elif node == DetermineChapterNodes.ENTER_DETERMINE_CHAPTER:
-                        yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
-                            message=f"正在确定章节信息...\n"))
-                    elif node == DetermineChapterNodes.PROCESS_LLM_RESPONSE:
-                        yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"最高置信度章节如下:\n"))
-                        main_chapter = update_data.get("main_chapter")
-                        yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"编码: {main_chapter.get("chapter_code")}\n"
-                                    f"标题: {main_chapter.get("chapter_title")}\n"
-                                    f"置信度: {main_chapter.get("confidence_score")}\n"
-                                    f"原因:{main_chapter.get("reason")}\n"))
-                        alternative_chapters = update_data.get("alternative_chapters")
-                        if alternative_chapters:
-                            yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                                message=f"\n候选章节如下:\n"))
-                            for chapter in alternative_chapters:
-                                yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                                    message=f"编码: {chapter.get("chapter_code")}\n"
-                                            f"标题: {chapter.get("chapter_title")}\n"
-                                            f"置信度: {chapter.get("confidence_score")}\n"
-                                            f"原因:{chapter.get("reason")}\n"))
-                                yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(message="\n"))
             # 类目确定节点
             if sub_graph_name == HtsAgents.DETERMINE_HEADING.code:
                 for node, update_data in updates.items():
@@ -224,4 +195,4 @@ async def get_graph_state(request: Request, thread_id: str):
     config = {"configurable": {"thread_id": thread_id}}
     graph: CompiledStateGraph = request.app.state.hts_graph
     state_snapshot = await graph.aget_state(config, subgraphs=True)
-    return json.dumps(pydantic_to_dict(state_snapshot.values), indent=2)
+    return json.dumps(pydantic_to_dict(state_snapshot.values), indent=2, ensure_ascii=False)

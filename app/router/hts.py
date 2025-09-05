@@ -10,4 +10,4 @@ hts_router = APIRouter()
 
 @hts_router.post("/get_rate_lines_by_wco_subheadings")
 async def get_rate_lines_by_wco_subheadings(subheading_codes: Annotated[list[str], Body()]):
-    return json.dumps(await hts_service.get_rate_lines_by_wco_subheadings(subheading_codes))
+    return json.dumps(await hts_service.get_rate_lines_by_wco_subheadings(subheading_codes), ensure_ascii=False)

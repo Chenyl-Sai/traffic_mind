@@ -1,7 +1,7 @@
 """
 确定所属类目
 """
-import logging
+import logging, json
 
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph import START, StateGraph, END
@@ -126,12 +126,9 @@ def get_determined_chapter_codes(state: HtsClassifyAgentState):
     """
     从state中获取上一环节确定的章节编码列表
     """
-    main_chapter = state.get("main_chapter")
-    alternative_chapters = state.get("alternative_chapters")
-    chapter_codes = [main_chapter.get("chapter_code")]
-    if alternative_chapters:
-        chapter_codes.extend([alternative_chapter.get("chapter_code") for alternative_chapter in alternative_chapters])
-    return chapter_codes
+    heading_documents = state.get("heading_documents")
+    chapter_details_dict = json.loads(heading_documents)
+    return [chapter_description.split(":")[0] for chapter_description in chapter_details_dict]
 
 
 def build_determine_heading_graph() -> CompiledStateGraph:

@@ -25,7 +25,6 @@ def get_sync_opensearch_client() -> OpenSearch:
 
 def init_indices(app):
     init_item_rewrite_index()
-    init_chapter_classify_result_index()
     init_heading_classify_result_index()
     init_subheading_classify_result_index()
     init_rate_line_classify_result_index()
@@ -99,55 +98,6 @@ def init_item_rewrite_index():
                         "thread_id": {
                             "type": "keyword"
                         },
-                        "created_at": {
-                            "type": "date"
-                        }
-                    }
-                }
-            }
-            sync_client.indices.create(index=index_name, body=body)
-            logger.debug(f"OpenSearch索引{index_name}创建成功")
-
-
-def init_chapter_classify_result_index():
-    """
-    初始化商品章节分类结果索引
-    """
-    index_name = IndexName.CHAPTER_CLASSIFY.value
-    with get_sync_opensearch_client() as sync_client:
-        if sync_client.indices.exists(index=index_name):
-            logger.debug(f"OpenSearch索引{index_name}已存在")
-        else:
-            chapter = {
-                "properties": {
-                    "chapter_code": {"type": "keyword"},
-                    "chapter_title": {"type": "text"},
-                    "reason": {"type": "text"},
-                    "confidence_score": {"type": "text"},
-                }
-            }
-            body = {
-                "settings": {
-                    "index": {
-                        "number_of_shards": 1,
-                        "number_of_replicas": 1,
-                        "knn": True
-                    }
-                },
-                "mappings": {
-                    "properties": {
-                        "origin_item_name": {
-                            "type": "keyword",
-                        },
-                        "rewritten_item": rewritten_item_body,
-                        "rewritten_item_vector": {
-                            "type": "knn_vector",
-                            "dimension": DEFAULT_EMBEDDINGS_DIMENSION,
-                            "space_type": "cosinesimil",
-                        },
-                        "rag_chapter_codes": {"type": "keyword"},
-                        "main_chapter": chapter,
-                        "alternative_chapters": chapter,
                         "created_at": {
                             "type": "date"
                         }
@@ -347,18 +297,16 @@ def init_e2e_cache_index():
 
 
 def init_for_evaluation():
-    init_evaluate_retrieve_chapter_index()
-    init_evaluate_llm_confirm_chapter_index()
+    init_evaluate_retrieve_heading_index()
     init_evaluate_llm_confirm_heading_index()
     init_evaluate_llm_confirm_subheading_index()
     init_evaluate_llm_confirm_rate_line_index()
 
-
-def init_evaluate_retrieve_chapter_index():
+def init_evaluate_retrieve_heading_index():
     """
     初始化用于评估章节检索是否准确的索引
     """
-    index_name = IndexName.EVALUATE_RETRIEVE_CHAPTER.value
+    index_name = IndexName.EVALUATE_RETRIEVE_HEADING.value
     with get_sync_opensearch_client() as sync_client:
         if sync_client.indices.exists(index=index_name):
             logger.debug(f"OpenSearch索引{index_name}已存在")
@@ -379,70 +327,14 @@ def init_evaluate_retrieve_chapter_index():
                             "type": "keyword",
                         },
                         "rewritten_item": rewritten_item_body,
-                        "chapter_documents": {
-                            "properties": {
-                                "chapter_title": {"type": "text"},
-                                "includes": {"type": "text"},
-                                "common_examples": {"type": "text"},
-                                "chapter_code": {"type": "text"},
-                            }
-                        },
-                        "actual_chapter": {
-                            "type": "keyword"
-                        },
-                        "created_at": {
-                            "type": "date"
-                        }
-                    }
-                }
-            }
-            sync_client.indices.create(index=index_name, body=body)
-            logger.debug(f"OpenSearch索引{index_name}创建成功")
-
-
-def init_evaluate_llm_confirm_chapter_index():
-    """
-    初始化用于评估LLM决策章节是否准确的索引
-    """
-    index_name = IndexName.EVALUATE_LLM_CONFIRM_CHAPTER.value
-    with get_sync_opensearch_client() as sync_client:
-        if sync_client.indices.exists(index=index_name):
-            logger.debug(f"OpenSearch索引{index_name}已存在")
-        else:
-            chapter_detail = {
-                "properties": {
-                    "chapter_code": {"type": "keyword"},
-                    "chapter_title": {"type": "text"},
-                    "reason": {"type": "text"},
-                    "confidence_score": {"type": "float"},
-                }
-            }
-            body = {
-                "settings": {
-                    "index": {
-                        "number_of_shards": 1,
-                        "number_of_replicas": 1,
-                    }
-                },
-                "mappings": {
-                    "properties": {
-                        "evaluate_version": {
+                        "candidate_heading_codes": {
                             "type": "keyword",
                         },
-                        "origin_item_name": {
-                            "type": "keyword",
-                        },
-                        "rewritten_item": rewritten_item_body,
-                        "retrieved_chapter_codes": {"type": "text"},
-                        "llm_response": {
-                            "properties": {
-                                "main_chapter": chapter_detail,
-                                "alternative_chapters": chapter_detail,
-                                "reason": {"type": "text"},
-                            }
-                        },
-                        "actual_chapter": {
+                        "actual_heading": {
                             "type": "keyword"
+                        },
+                        "matches": {
+                            "type": "boolean"
                         },
                         "created_at": {
                             "type": "date"
@@ -499,6 +391,9 @@ def init_evaluate_llm_confirm_heading_index():
                         "actual_heading": {
                             "type": "keyword"
                         },
+                        "matches": {
+                            "type": "boolean"
+                        },
                         "created_at": {
                             "type": "date"
                         }
@@ -553,6 +448,9 @@ def init_evaluate_llm_confirm_subheading_index():
                         },
                         "actual_subheading": {
                             "type": "keyword"
+                        },
+                        "matches": {
+                            "type": "boolean"
                         },
                         "created_at": {
                             "type": "date"

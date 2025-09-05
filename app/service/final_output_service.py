@@ -23,7 +23,6 @@ class FinalOutputService:
         self.rewrite_item_embeddings_service = RewriteItemEmbeddingsService(embeddings=self.embeddings)
 
     async def get_final_output_from_llm(self, origin_item_name: str, rewritten_item: dict,
-                                        chapter_candidates: list, selected_chapter: str, select_chapter_reason: str,
                                         heading_candidates: list, selected_heading: str, select_heading_reason: str,
                                         subheading_candidates: list, selected_subheading: str,
                                         select_subheading_reason: str,
@@ -34,7 +33,6 @@ class FinalOutputService:
 
         prompt = PromptTemplate(template=generate_final_output_template,
                                 input_variables=["original_item", "rewritten_item",
-                                                 "chapter_candidates", "selected_chapter", "reason_chapter",
                                                  "heading_candidates", "selected_heading", "reason_heading",
                                                  "subheading_candidates", "selected_subheading", "reason_subheading",
                                                  "rate_line_candidates", "selected_rate_line", "reason_rate_line",
@@ -43,9 +41,6 @@ class FinalOutputService:
 
         human_message = prompt.invoke({"original_item": origin_item_name,
                                        "rewritten_item": rewritten_item,
-                                       "chapter_candidates": chapter_candidates,
-                                       "selected_chapter": selected_chapter,
-                                       "reason_chapter": select_chapter_reason,
                                        "heading_candidates": heading_candidates,
                                        "selected_heading": selected_heading,
                                        "reason_heading": select_heading_reason,
@@ -62,7 +57,7 @@ class FinalOutputService:
         return human_message, output, parser.parse(output.content)
 
     async def save_e2e_exact_cache(self, origin_item_name: str, rewritten_item: dict,
-                                   chapter_code, chapter_title, chapter_reason,
+                                   chapter_code,
                                    heading_code, heading_title, heading_reason,
                                    subheading_code, subheading_title, subheading_reason,
                                    rate_line_code, rate_line_title, rate_line_reason,
@@ -80,8 +75,6 @@ class FinalOutputService:
                                     special_properties=rewritten_item.get("special_properties"),
                                     other_notes=rewritten_item.get("other_notes"),
                                     chapter_code=chapter_code,
-                                    chapter_title=chapter_title,
-                                    chapter_reason=chapter_reason,
                                     heading_code=heading_code,
                                     heading_title=heading_title,
                                     heading_reason=heading_reason,

@@ -6,8 +6,6 @@ class HtsAgents(Enum):
     REWRITE_ITEM = ("rewrite_item", "商品重写", "负责商品信息的补充与扩写")
     RETRIEVE_DOCUMENTS = (
     "retrieve_documents", "文档检索", "根据语义相似度，查找与重写商品相近的Chapter、Heading、Subheading、RateLine信息")
-    DETERMINE_CHAPTER = (
-    "determine_chapter", "确定章节", "根据检索到的相关章节说明文档和重写后的商品信息，由LLM决定所属章节")
     DETERMINE_HEADING = (
     "determine_heading", "确定类目", "根据检索到的相关章节说明文档和重写后的商品信息，由LLM决定所属类目")
     DETERMINE_SUBHEADING = (
@@ -43,7 +41,6 @@ class HtsAgents(Enum):
 
 
 class DocumentTypes(Enum):
-    CHAPTER = ("chapter", "章节")
     HEADING = ("heading", "类目")
     SUBHEADING = ("subheading", "子目")
     RATE_LINE = ("rate_line", "税率线")
@@ -80,16 +77,6 @@ class RetrieveDocumentsNodes(str, Enum):
     ENTER_RETRIEVE_DOCUMENTS = "enter_retrieve_documents"
     RETRIEVE_DOCUMENTS = "retrieve_documents"
     SAVE_RETRIEVE_RESULT_FOR_EVALUATION = "save_retrieve_result_for_evaluation"
-
-
-class DetermineChapterNodes(str, Enum):
-    ENTER_DETERMINE_CHAPTER = "enter_determine_chapter"
-    GET_CHAPTER_FROM_CACHE = "get_chapter_from_cache"
-    USE_LLM_TO_DETERMINE_CHAPTER = "use_llm_to_determine_chapter"
-    PROCESS_LLM_RESPONSE = "process_llm_response"
-    SAVE_LLM_RESPONSE_FOR_EVALUATION = "save_llm_response_for_evaluation"
-    SAVE_EXACT_CHAPTER_CACHE = "save_exact_chapter_cache"
-    SAVE_SIMIL_CHAPTER_CACHE = "save_simil_chapter_cache"
 
 
 class DetermineHeadingNodes(str, Enum):

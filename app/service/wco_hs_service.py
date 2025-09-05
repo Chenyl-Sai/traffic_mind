@@ -361,6 +361,12 @@ async def get_subheadings_by_subheading_codes(session: AsyncSession, subheading_
         return await select_current_version_subheadings_by_codes(session, current_version, subheading_codes)
     raise Exception("没有获取到当前版本，请先初始化数据！")
 
+async def get_headings_by_chapter_code(session: AsyncSession, chapter_code: str):
+    chapters = await get_chapters_by_chapter_codes(session, [chapter_code])
+    if chapters:
+        return await select_headings_by_chapter(session, chapters[0].id)
+    else:
+        return []
 
 
 async def get_heading_detail_by_chapter_codes(chapter_codes: list):

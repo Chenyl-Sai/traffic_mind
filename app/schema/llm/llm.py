@@ -13,6 +13,22 @@ class ChapterExtends(BaseModel):
                                        description="常见商品实例，如laptops, dishwashers, vacuum pumps, etc.")
 
 
+class HeadingExtends(BaseModel):
+    """
+    这是对海关编码HS系统中Chapter说明的补充信息
+    """
+    chapter_title: str = Field(title="章节标题",
+                               description="入参章节说明信息，如Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof")
+    heading_title: str = Field(title="类目标题",
+                               description="入参类目说明信息，如Automatic data processing machines and units thereof; magnetic or optical readers, machines for transcribing data onto data media in coded form and machines for processing such data, not elsewhere specified or included.")
+    includes: list[str] | None = Field(title="可能包含的常见商品子类",
+                                       description="可能包含的商品种类信息，如Personal computers, Storage units, Input units, Output units, Data processing peripherals",
+                                       default=None)
+    common_examples: list[str] | None = Field(title="常见商品实例",
+                                              description="常见商品实例，如laptops, HDD, SSD, keyboards, printers, USB flash drives, etc.",
+                                              default=None)
+
+
 class ItemRewriteResponse(BaseModel):
     """
     商品重写结果
@@ -23,17 +39,17 @@ class ItemRewriteResponse(BaseModel):
                              description="商品名称，如果不是字符串自动改写成字符串，如未提取到则重写失败，除非改写失败，否则必须返回",
                              default=None)
     en_name: str | None = Field(title="商品英文名称",
-                             description="直接翻译输入的商品名称为中文，如果输入是英文，则不翻译，直接返回原始数据，除非改写失败，否则必须返回",
-                             default=None)
+                                description="直接翻译输入的商品名称为中文，如果输入是英文，则不翻译，直接返回原始数据，除非改写失败，否则必须返回",
+                                default=None)
     cn_name: str | None = Field(title="商品中文名称",
-                             description="直接翻译输入的商品名称为中文，如果输入是中文，则不翻译，直接返回原始数据，除非改写失败，否则必须返回",
-                             default=None)
+                                description="直接翻译输入的商品名称为中文，如果输入是中文，则不翻译，直接返回原始数据，除非改写失败，否则必须返回",
+                                default=None)
     classification_name_cn: str | None = Field(title="商品归类名称",
-                             description="简短的归类名称，比如各种纸轴棉签、木轴棉签、竹制棉签等等，简短归类到棉签",
-                             default=None)
+                                               description="简短的归类名称，比如各种纸轴棉签、木轴棉签、竹制棉签等等，简短归类到棉签",
+                                               default=None)
     classification_name_en: str | None = Field(title="商品归类英文名称",
-                             description="简短的归类英文名称",
-                             default=None)
+                                               description="简短的归类英文名称",
+                                               default=None)
     brand: str | None = Field(title="商品品牌", description="如有提及或可通过品类推断", default='无品牌')
     materials: str | None = Field(title="商品材质", description="主要材料及占比，如80%棉+20%聚酯纤维", default=None)
     purpose: str | None = Field(title="商品用途", description="消费场景/功能，如家用，工业用，宠物用，医用等", default=None)
@@ -42,31 +58,6 @@ class ItemRewriteResponse(BaseModel):
     special_properties: str | None = Field(title="特殊属性", description="是否带电、是否含有液体、是否可食用等",
                                            default=None)
     other_notes: str | None = Field(title="其他说明", description="任何其他可能影响分类的有用信息", default=None)
-
-
-class ChapterDetermineResponseDetail(BaseModel):
-    """
-    选择此章节的原因及置信度等信息
-    """
-    chapter_code: str = Field(title="章节编码", description="章节编码,入参之一，直接返回")
-    chapter_title: str = Field(title="章节标题", description="章节标题，入参之一，直接返回")
-    reason: str = Field(title="选择此章节的原因", description="选择此章节的简单的依据说明", default=None)
-    confidence_score: float = Field(title="选择此章节的置信度",
-                                    description="选择此章节的置信度，数值在0-10之间，商品所属章节概率越大数值越大",
-                                    default=0.0)
-
-
-class ChapterDetermineResponse(BaseModel):
-    """
-    根据商品信息选择置信度最高的章节，以及候选章节
-    """
-    main_chapter: ChapterDetermineResponseDetail | None = Field(title="置信度最高的章节",
-                                                                description="置信度最高的一个章节", default=None)
-    alternative_chapters: list[ChapterDetermineResponseDetail] | None = Field(title="其他备选章节",
-                                                                              description="返回至少3个至多5个备选chapter",
-                                                                              default=None)
-    reason: str | None = Field(title="未正确分类的原因", description="所有给定chapter列表都不满足时，给出不满足原因",
-                               default=None)
 
 
 class HeadingDetermineResponseDetail(BaseModel):
@@ -127,11 +118,11 @@ class RateLineDetermineResponse(BaseModel):
     rate_line_title: str | None = Field(title="税率线标题", description="税率线标题，入参之一，直接返回", default=None)
     reason: str | None = Field(title="选择此税率线的原因", description="选择此税率线的简单的依据说明", default=None)
     confidence_score: float | None = Field(title="选择此税率线的置信度",
-                                    description="数值在0-10之间，商品所属税率线概率越大数值越大",
-                                    default=0.0)
+                                           description="数值在0-10之间，商品所属税率线概率越大数值越大",
+                                           default=0.0)
     disqualification_others_reason: str | None = Field(title="弃选其他选项原因",
-                                    description="未选择其他提供的rate_line的原因说明",
-                                    default=None)
+                                                       description="未选择其他提供的rate_line的原因说明",
+                                                       default=None)
     fail_reason: str | None = Field(title="失败原因",
                                     description="当所有税率线都不满足条件时返回此字段，否则不用返回此字段",
                                     default=None)

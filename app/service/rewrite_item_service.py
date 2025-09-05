@@ -159,7 +159,7 @@ class RewriteItemEmbeddingsService:
         """
         rewritten_item_vector = None
         ordered_rewritten_item = OrderedDict(sorted(rewritten_item.items()))
-        rewritten_item_json = json.dumps(ordered_rewritten_item)
+        rewritten_item_json = json.dumps(ordered_rewritten_item, ensure_ascii=False)
         redis_hash_key = f"{RedisKeyPrefix.REWRITTEN_ITEM_EMBEDDINGS.value}:{md5_hash(rewritten_item_json)}"
         async_redis = await get_async_redis()
         vector_json = await async_redis.get(redis_hash_key)
@@ -168,5 +168,5 @@ class RewriteItemEmbeddingsService:
         if rewritten_item_vector is None:
             rewritten_item_vector = await self.embeddings.aembed_query(rewritten_item_json)
             # 将llm返回的embedding缓存到redis
-            await async_redis.set(redis_hash_key, json.dumps(rewritten_item_vector))
+            await async_redis.set(redis_hash_key, json.dumps(rewritten_item_vector, ensure_ascii=False))
         return rewritten_item_vector

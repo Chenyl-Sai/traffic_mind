@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Depends
 
 from app.agent.hts_graph import build_hts_classify_graph
-from app.core.config import settings
 from app.core.constants import MilvusCollectionName
 from app.core.handlers import init_exception_handlers
 from app.core.milvus import get_knowledge_client, init_milvus_client

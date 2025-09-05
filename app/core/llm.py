@@ -13,12 +13,6 @@ base_qwen_config = dict(
     callbacks=[ConsoleCallbackHandler()],
 )
 
-qwen_turbo_config = dict(
-    model="qwen-turbo",
-    api_key=settings.DASHSCOPE_API_KEY,
-    callbacks=[ConsoleCallbackHandler()],
-)
-
 base_qwen_llm = ChatTongyi(**base_qwen_config)
 
 qwen_turbo_llm = ChatTongyi(
@@ -33,7 +27,7 @@ qwen_plus_llm = ChatTongyi(
 )
 
 qwen_max_llm = ChatTongyi(
-    model="qwen-max",
+    model="qwen-max-latest",
     api_key=settings.DASHSCOPE_API_KEY,
     callbacks=[ConsoleCallbackHandler()],
 )
@@ -53,3 +47,4 @@ deep_seek_llm = ChatDeepSeek(
     api_key=settings.DEEPSEEK_API_KEY,
     callbacks=[ConsoleCallbackHandler()],
 )
+

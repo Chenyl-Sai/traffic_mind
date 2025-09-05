@@ -31,10 +31,6 @@ async def ask_llm_to_generate_final_output(state: HtsClassifyAgentState, config,
     final_subheading_code = final_rate_line_code[:6]
     final_heading_code = final_subheading_code[:4]
     final_chapter_code = final_heading_code[:2]
-    final_chapter_reason = \
-        next((chapter.get("reason") for chapter in
-              ([state.get("main_chapter")] + (state.get("alternative_chapters") or []))
-              if chapter.get("chapter_code") == final_chapter_code), None)
     final_heading_reason = \
         next((heading.get("reason") for heading in
               ([state.get("main_heading")] + (state.get("alternative_headings") or []))
@@ -47,9 +43,6 @@ async def ask_llm_to_generate_final_output(state: HtsClassifyAgentState, config,
     input_message, output_message, llm_response = await final_output_service.get_final_output_from_llm(
         origin_item_name=state["item"],
         rewritten_item=state.get("rewritten_item"),
-        chapter_candidates=state.get("candidate_chapter_codes"),
-        selected_chapter=final_chapter_code,
-        select_chapter_reason=final_chapter_reason,
         heading_candidates=state.get("candidate_heading_codes").get(
             final_chapter_code),
         selected_heading=final_heading_code,
@@ -88,14 +81,6 @@ async def save_exact_e2e_cache(state: HtsClassifyAgentState, config):
     final_subheading_code = final_rate_line_code[:6]
     final_heading_code = final_subheading_code[:4]
     final_chapter_code = final_heading_code[:2]
-    final_chapter_title = \
-        next((chapter.get("chapter_title") for chapter in
-              ([state.get("main_chapter")] + (state.get("alternative_chapters") or []))
-              if chapter.get("chapter_code") == final_chapter_code), None)
-    final_chapter_reason = \
-        next((chapter.get("reason") for chapter in
-              ([state.get("main_chapter")] + (state.get("alternative_chapters") or []))
-              if chapter.get("chapter_code") == final_chapter_code), None)
     final_heading_title = \
         next((heading.get("heading_title") for heading in
               ([state.get("main_heading")] + (state.get("alternative_headings") or []))
@@ -115,8 +100,6 @@ async def save_exact_e2e_cache(state: HtsClassifyAgentState, config):
     await final_output_service.save_e2e_exact_cache(origin_item_name=state.get("item"),
                                                     rewritten_item=state.get("rewritten_item"),
                                                     chapter_code=final_chapter_code,
-                                                    chapter_title=final_chapter_title,
-                                                    chapter_reason=final_chapter_reason,
                                                     heading_code=final_heading_code,
                                                     heading_title=final_heading_title,
                                                     heading_reason=final_heading_reason,

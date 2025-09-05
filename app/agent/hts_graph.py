@@ -10,7 +10,7 @@ from langgraph.types import Command
 from psycopg_pool import AsyncConnectionPool
 
 from app.agent.state import HtsClassifyAgentState
-from app.agent.node import rewrite_item, retrieve_documents, determine_chapter, determine_heading, determine_subheading, \
+from app.agent.node import rewrite_item, retrieve_documents, determine_heading, determine_subheading, \
     determine_rate_line, final_output
 from app.agent.util.exception_handler import safe_raise_exception_node
 from app.core.config import settings
@@ -49,15 +49,14 @@ async def agent_router(state: HtsClassifyAgentState):
             return Command(goto=END)
         # 重写完成之后，查看状态数据决定走向
         if state.get("rewrite_success"):
-            return Command(update={"current_document_type": DocumentTypes.CHAPTER},
+            # 直接使用heading,弃用先chapter再heading，一步到位
+            return Command(update={"current_document_type": DocumentTypes.HEADING},
                            goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
         else:
             return Command(update={"final_description": "请输入正确商品信息"}, goto=END)
 
     # 从文档检索返回，判断下一步走向
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.RETRIEVE_DOCUMENTS.code:
-        if state.get("current_document_type") == DocumentTypes.CHAPTER:
-            return Command(goto=HtsAgents.DETERMINE_CHAPTER.code)
         if state.get("current_document_type") == DocumentTypes.HEADING:
             return Command(goto=HtsAgents.DETERMINE_HEADING.code)
         if state.get("current_document_type") == DocumentTypes.SUBHEADING:
@@ -65,9 +64,6 @@ async def agent_router(state: HtsClassifyAgentState):
         if state.get("current_document_type") == DocumentTypes.RATE_LINE:
             return Command(goto=HtsAgents.DETERMINE_RATE_LINE.code)
     # LLM返回了可能的chapter列表，下一步获取chapter下heading的资料
-    if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_CHAPTER.code:
-        return Command(update={"current_document_type": DocumentTypes.HEADING},
-                       goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
     if state.get("current_agent", HtsAgents.SUPERVISOR.code) == HtsAgents.DETERMINE_HEADING.code:
         return Command(update={"current_document_type": DocumentTypes.SUBHEADING},
                        goto=HtsAgents.RETRIEVE_DOCUMENTS.code)
@@ -105,14 +101,12 @@ async def build_hts_classify_graph() -> CompiledStateGraph:
     hts_classify_graph_builder.add_node(SupervisorNodes.AGENT_ROUTER, agent_router)
     sub_graph_rewrite_item = rewrite_item.build_rewrite_item_graph()
     sub_graph_retrieve_documents = retrieve_documents.build_retrieve_documents_graph()
-    sub_graph_determine_chapter = determine_chapter.build_determine_chapter_graph()
     sub_graph_determine_heading = determine_heading.build_determine_heading_graph()
     sub_graph_determine_subheading = determine_subheading.build_determine_subheading_graph()
     sub_graph_determine_rate_line = determine_rate_line.build_determine_subheading_graph()
     sub_graph_generate_final_output = final_output.build_generate_final_output_graph()
     hts_classify_graph_builder.add_node(HtsAgents.REWRITE_ITEM.code, sub_graph_rewrite_item)
     hts_classify_graph_builder.add_node(HtsAgents.RETRIEVE_DOCUMENTS.code, sub_graph_retrieve_documents)
-    hts_classify_graph_builder.add_node(HtsAgents.DETERMINE_CHAPTER.code, sub_graph_determine_chapter)
     hts_classify_graph_builder.add_node(HtsAgents.DETERMINE_HEADING.code, sub_graph_determine_heading)
     hts_classify_graph_builder.add_node(HtsAgents.DETERMINE_SUBHEADING.code, sub_graph_determine_subheading)
     hts_classify_graph_builder.add_node(HtsAgents.DETERMINE_RATE_LINE.code, sub_graph_determine_rate_line)
@@ -128,7 +122,6 @@ async def build_hts_classify_graph() -> CompiledStateGraph:
 
     hts_classify_graph_builder.add_edge(HtsAgents.REWRITE_ITEM.code, SupervisorNodes.AGENT_ROUTER)
     hts_classify_graph_builder.add_edge(HtsAgents.RETRIEVE_DOCUMENTS.code, SupervisorNodes.AGENT_ROUTER)
-    hts_classify_graph_builder.add_edge(HtsAgents.DETERMINE_CHAPTER.code, SupervisorNodes.AGENT_ROUTER)
     hts_classify_graph_builder.add_edge(HtsAgents.DETERMINE_HEADING.code, SupervisorNodes.AGENT_ROUTER)
     hts_classify_graph_builder.add_edge(HtsAgents.DETERMINE_SUBHEADING.code, SupervisorNodes.AGENT_ROUTER)
     hts_classify_graph_builder.add_edge(HtsAgents.DETERMINE_RATE_LINE.code, SupervisorNodes.AGENT_ROUTER)

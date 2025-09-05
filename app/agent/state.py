@@ -4,7 +4,7 @@ from langgraph.graph import MessagesState
 
 from app.agent.constants import DocumentTypes
 from app.schema.llm.llm import SubheadingDetermineResponse, HeadingDetermineResponse, RateLineDetermineResponse, \
-    ItemRewriteResponse, ChapterDetermineResponse, GenerateFinalOutputResponse
+    ItemRewriteResponse, GenerateFinalOutputResponse
 
 class OutputMessage(TypedDict):
     type: str
@@ -29,18 +29,9 @@ class HtsClassifyAgentState(MessagesState):
     rewritten_item: dict[str, str]
     # 文档检索
     current_document_type: DocumentTypes
-    chapter_documents: list[str]
     heading_documents: str
     subheading_documents: str
     rate_line_documents: str
-    # 确定章节
-    hit_chapter_cache: bool
-    determine_chapter_llm_response: ChapterDetermineResponse
-    determine_chapter_success: bool
-    determine_chapter_fail_reason: str
-    candidate_chapter_codes: list[str]
-    main_chapter: dict
-    alternative_chapters: list[dict]
     # 确定类目
     hit_heading_cache: bool
     determine_heading_llm_response: HeadingDetermineResponse

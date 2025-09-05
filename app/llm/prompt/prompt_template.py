@@ -1,10 +1,32 @@
 expend_chapter_template = """
-你是HS（协调制度）编码分类专家。给定一个HS章节标题，以JSON格式生成结构化的扩展详情。
+您是国际贸易商品分类专家，给定一个HS章节标题，以JSON格式生成结构化的扩展详情。
 
 {format_instructions}
 
 为以下HS章节标题生成扩展内容：
 {title}"""
+
+
+expend_heading_template = """
+您是国际贸易商品分类专家，您的任务是根据用户提供的chapter标题和heading标题进行扩展，将其转化为结构化的信息。
+
+1. **扩展说明**:
+    - chapter标题只是用于参考heading所属的章节，生成的主要根据是heading标题信息
+    - 如果heading是类似[deleted]这种已经废弃的标题，则不要生成种类和示例
+    - 生成10个heading下常见的商品种类，简短的描述就可以了，不需要啰嗦的说明
+    - 生成10个heading下常见的商品示例，一般是商品种类下的常见商品
+    
+2. **输出数据结构**:
+
+    {format_instructions}
+
+3. **输出说明**:
+    - 请全程使用中文进行回答。
+    - 只返回结构化的json数据，不要添加任何说明
+    
+4. **输入信息**:
+    - chapter_title: {chapter_title}
+    - heading_title: {heading_title}"""
 
 
 rewrite_item_template = """
@@ -38,29 +60,6 @@ rewrite_item_template = """
     {item}
 """
 
-
-determine_chapter_template = """
-As a seasoned expert in international trade commodity classification, your task is to analyze the provided product description and determine the most appropriate Harmonized System (HS) chapter classification based on the given chapter list. Your analysis should include:
-
-1. **Chapter Determination**: Identify the most relevant HS chapter for the product.
-2. **Rationale**: Provide a detailed explanation supporting your classification decision, referencing specific product characteristics and chapter criteria.
-3. **Confidence Score**: Assess your confidence in the classification (e.g., 0-10) with justification.
-4. **Alternative Considerations**: Mention any borderline cases or alternative chapters considered, if applicable.
-
-**Constraints**:
-    For multi-material products, try to retain multiple material-related categories. For example, for paper shaft cotton swabs, keep both paper-related and cotton-related categories to avoid only retaining the paper category and then finding that all paper categories do not match and missing the cotton category.
-
-**Chapter Scope**:
-{chapter_list}
-
-**Output Format**: 
-{format_instructions}
-
-**Product Description**:
-{item}
-
-Please provide your analysis in JSON format as specified, ensuring clarity and precision in your classification.
-"""
 
 determine_heading_template = """
 You are an expert in international trade commodity classification. Based on the product description provided, analyze the item and assign the most appropriate HS Code heading from the given scope. Strictly follow the requirements and output in the specified JSON format.
@@ -163,11 +162,7 @@ Here is the decision process:
     Original product description: {original_item}
     Rewritten product description: {rewritten_item}
 
-**Decision Process**
-    Chapter candidates: {chapter_candidates}
-        Selected: {selected_chapter}
-        Reason: {reason_chapter}
-    
+**Decision Process**    
     Heading candidates: {heading_candidates}
         Selected: {selected_heading}
         Reason: {reason_heading}

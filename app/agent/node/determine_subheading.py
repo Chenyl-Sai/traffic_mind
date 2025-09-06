@@ -120,11 +120,7 @@ def get_confirmed_heading_codes(state: HtsClassifyAgentState):
     """
     获取上一环节确定的类目编码列表
     """
-    main_heading = state.get("main_heading")
-    heading_codes = [main_heading.get("heading_code")]
-    alternative_headings = state.get("alternative_headings")
-    if alternative_headings:
-        heading_codes.extend([heading.get("heading_code") for heading in alternative_headings])
+    heading_codes = [heading.get("heading_code") for heading in state.get("alternative_headings")]
     return sorted(heading_codes)
 
 

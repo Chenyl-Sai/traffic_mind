@@ -32,11 +32,7 @@ async def retrieve_documents(state: HtsClassifyAgentState):
         return {"heading_documents": heading_documents, "candidate_heading_codes": candidate_heading_codes}
     if state.get("current_document_type") == DocumentTypes.SUBHEADING:
         # 从数据库获取heading下subheading信息
-        heading_codes = [state.get("main_heading").get("heading_code")]
-        alternative_headings = state.get("alternative_headings")
-        if alternative_headings:
-            heading_codes.extend(
-                [alternative_heading.get("heading_code") for alternative_heading in alternative_headings])
+        heading_codes = get_confirmed_heading_codes(state)
         subheading_documents, candidate_subheading_codes = await retrieve_service.retrieve_subheading_documents(
             heading_codes)
         return {"subheading_documents": subheading_documents, "candidate_subheading_codes": candidate_subheading_codes}
@@ -74,6 +70,14 @@ async def save_retrieve_result_for_evaluation(state: HtsClassifyAgentState, conf
 
     return {}
 
+
+
+def get_confirmed_heading_codes(state: HtsClassifyAgentState):
+    """
+    获取上一环节确定的类目编码列表
+    """
+    heading_codes = [heading.get("heading_code") for heading in state.get("alternative_headings")]
+    return sorted(heading_codes)
 
 def build_retrieve_documents_graph() -> CompiledStateGraph:
     graph_builder = StateGraph(HtsClassifyAgentState)

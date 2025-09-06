@@ -16,22 +16,6 @@ class RetrieveDocumentsService:
     def __init__(self, async_milvus_client: AsyncMilvusClient):
         self.async_milvus_client = async_milvus_client
 
-
-    async def save_heading_retrieve_evaluation(self, evaluate_version: str, origin_item_name: str, rewritten_item: dict,
-                                               candidate_heading_codes: list[str], actual_heading: str):
-        # 保存一下获取的chapter信息用于评估准确性
-        document = {
-            "evaluate_version": evaluate_version,
-            "origin_item_name": origin_item_name,
-            "rewritten_item": rewritten_item,
-            "candidate_heading_codes": candidate_heading_codes,
-            "actual_heading": actual_heading,
-            "matches": actual_heading in candidate_heading_codes,
-            "created_at": datetime.now(timezone.utc),
-        }
-        async with get_async_opensearch_client() as async_client:
-            await async_client.index(index=IndexName.EVALUATE_RETRIEVE_HEADING, body=document)
-
     async def retrieve_heading_documents(self, rewritten_item: dict):
         """
         直接获取组合后的heading层信息，不先获取chapter层了
@@ -113,6 +97,22 @@ class RetrieveDocumentsService:
             heading_codes = [heading.get("heading_code") for heading in chapter_detail]
             candidate_heading_codes[chapter_code] = heading_codes
         return json.dumps(chapter_detail_dict, ensure_ascii=False), candidate_heading_codes
+
+
+    async def save_heading_retrieve_evaluation(self, evaluate_version: str, origin_item_name: str, rewritten_item: dict,
+                                               candidate_heading_codes: list[str], actual_heading: str):
+        # 保存一下获取的chapter信息用于评估准确性
+        document = {
+            "evaluate_version": evaluate_version,
+            "origin_item_name": origin_item_name,
+            "rewritten_item": rewritten_item,
+            "candidate_heading_codes": candidate_heading_codes,
+            "actual_heading": actual_heading,
+            "matches": actual_heading in candidate_heading_codes,
+            "created_at": datetime.now(timezone.utc),
+        }
+        async with get_async_opensearch_client() as async_client:
+            await async_client.index(index=IndexName.EVALUATE_RETRIEVE_HEADING, body=document)
 
 
     async def retrieve_subheading_documents(self, heading_codes: list[str]):

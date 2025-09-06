@@ -15,14 +15,12 @@ evaluation_router = APIRouter()
 
 @evaluation_router.post("/hts_classify")
 async def hts_classify_evaluation(request: Request,
-                                  item_name: str,
-                                  evaluate_version: str,
-                                  thread_id: Annotated[str, Header()]):
+                                  item_name: str):
     """
     对商品分类进行评估
     """
     graph: CompiledStateGraph = request.app.state.hts_graph
-    config = {"configurable": {"thread_id": thread_id, "is_for_evaluation": True, "evaluate_version": evaluate_version}}
+    config = {"configurable": {"thread_id": str(uuid.uuid4()), "is_for_evaluation": True, "evaluate_version": str(uuid.uuid4())}}
     stream = graph.astream({"item": item_name}, config, stream_mode="updates", subgraphs=True)
     result = ""
     async for step in stream:

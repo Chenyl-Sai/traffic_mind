@@ -32,8 +32,7 @@ async def ask_llm_to_generate_final_output(state: HtsClassifyAgentState, config,
     final_heading_code = final_subheading_code[:4]
     final_chapter_code = final_heading_code[:2]
     final_heading_reason = \
-        next((heading.get("reason") for heading in
-              ([state.get("main_heading")] + (state.get("alternative_headings") or []))
+        next((heading.get("reason") for heading in state.get("alternative_headings")
               if heading.get("heading_code") == final_heading_code), None)
     final_subheading_reason = \
         next((subheading.get("reason") for subheading in
@@ -82,12 +81,10 @@ async def save_exact_e2e_cache(state: HtsClassifyAgentState, config):
     final_heading_code = final_subheading_code[:4]
     final_chapter_code = final_heading_code[:2]
     final_heading_title = \
-        next((heading.get("heading_title") for heading in
-              ([state.get("main_heading")] + (state.get("alternative_headings") or []))
+        next((heading.get("heading_title") for heading in state.get("alternative_headings")
               if heading.get("heading_code") == final_heading_code), None)
     final_heading_reason = \
-        next((heading.get("reason") for heading in
-              ([state.get("main_heading")] + (state.get("alternative_headings") or []))
+        next((heading.get("reason") for heading in state.get("alternative_headings")
               if heading.get("heading_code") == final_heading_code), None)
     final_subheading_title = \
         next((subheading.get("subheading_title") for subheading in

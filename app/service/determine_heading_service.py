@@ -29,18 +29,17 @@ class DetermineHeadingService:
         parser = PydanticOutputParser(pydantic_object=HeadingDetermineResponse)
         format_instructions = parser.get_format_instructions()
         prompt = PromptTemplate(template=determine_heading_template,
-                                input_variables=["item", "heading_list"],
+                                input_variables=["item", "heading_scope"],
                                 partial_variables={"format_instructions": format_instructions})
 
         human_message = prompt.invoke({"item": rewritten_item,
-                                       "heading_list": heading_documents}).to_messages()[0]
+                                       "heading_scope": heading_documents}).to_messages()[0]
 
         output = await self.llm.ainvoke(input=[human_message])
 
         return human_message, output, parser.parse(output.content)
 
     async def save_simil_cache(self, origin_item_name: str, rewritten_item: dict, chapter_codes: list[str],
-                               main_heading: dict,
                                alternative_headings: list[dict] | None):
         """
         保存语义相似度缓存
@@ -52,7 +51,6 @@ class DetermineHeadingService:
             "rewritten_item": rewritten_item,
             "rewritten_item_vector": rewritten_item_vector,
             "chapter_codes": str(sorted(chapter_codes)),
-            "main_heading": main_heading,
             "alternative_headings": alternative_headings,
             "created_at": datetime.now(timezone.utc)
         }
@@ -93,7 +91,6 @@ class DetermineHeadingService:
                 if score > 0.95:
                     return {
                         "hit_heading_cache": True,
-                        "main_heading": response["hits"]["hits"][0]["_source"]["main_heading"],
                         "alternative_headings": response["hits"]["hits"][0]["_source"]["alternative_headings"],
                     }
             return {"hit_heading_cache": False}
@@ -107,12 +104,14 @@ class DetermineHeadingService:
         """
         保存评估过程信息
         """
+        determine_heading_codes = [heading.heading_code for heading in llm_response.alternative_headings]
         document = {
             "evaluate_version": evaluate_version,
             "origin_item_name": origin_item_name,
             "heading_documents": heading_documents,
             "llm_response": llm_response.model_dump(),
             "actual_heading": actual_heading,
+            "matches": actual_heading in determine_heading_codes,
             "created_at": datetime.now(timezone.utc),
         }
         async with get_async_opensearch_client() as async_client:

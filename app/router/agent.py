@@ -104,25 +104,16 @@ async def sse_generator(stream):
                         yield format_response(SSEMessageTypeEnum.APPEND, SSEResponse(
                             message=f"正在确定类目信息...\n"))
                     elif node == DetermineHeadingNodes.PROCESS_LLM_RESPONSE:
-                        yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"最高置信度类目如下:\n"))
-                        main_heading = update_data.get("main_heading")
-                        yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                            message=f"编码: {main_heading.get("heading_code")}\n"
-                                    f"标题: {main_heading.get("heading_title")}\n"
-                                    f"置信度: {main_heading.get("confidence_score")}\n"
-                                    f"原因:{main_heading.get("reason")}\n"))
                         alternative_headings = update_data.get("alternative_headings")
-                        if alternative_headings:
+                        yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
+                            message=f"\n候选类目如下:\n"))
+                        for heading in alternative_headings:
                             yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                                message=f"\n候选类目如下:\n"))
-                            for heading in alternative_headings:
-                                yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(
-                                    message=f"编码: {heading.get("heading_code")}\n"
-                                            f"标题: {heading.get("heading_title")}\n"
-                                            f"置信度: {heading.get("confidence_score")}\n"
-                                            f"原因:{heading.get("reason")}\n"))
-                                yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(message="\n"))
+                                message=f"编码: {heading.get("heading_code")}\n"
+                                        f"标题: {heading.get("heading_title")}\n"
+                                        f"置信度: {heading.get("confidence_score")}\n"
+                                        f"原因:{heading.get("reason")}\n"))
+                            yield format_response(SSEMessageTypeEnum.HIDDEN, SSEResponse(message="\n"))
             # 子目确定节点
             if sub_graph_name == HtsAgents.DETERMINE_SUBHEADING.code:
                 for node, update_data in updates.items():

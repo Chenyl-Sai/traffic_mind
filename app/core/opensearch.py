@@ -145,7 +145,6 @@ def init_heading_classify_result_index():
                             "space_type": "cosinesimil",
                         },
                         "chapter_codes": {"type": "keyword"},
-                        "main_heading": heading,
                         "alternative_headings": heading,
                         "created_at": {
                             "type": "date"
@@ -383,9 +382,7 @@ def init_evaluate_llm_confirm_heading_index():
                         },
                         "llm_response": {
                             "properties": {
-                                "main_heading": heading_detail,
                                 "alternative_headings": heading_detail,
-                                "reason": {"type": "text"},
                             }
                         },
                         "actual_heading": {

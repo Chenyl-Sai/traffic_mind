@@ -38,7 +38,6 @@ class HtsClassifyAgentState(MessagesState):
     determine_heading_success: bool
     determine_heading_fail_reason: str
     candidate_heading_codes: dict[str, list]
-    main_heading: dict
     alternative_headings: list[dict]
     # 确定子目
     hit_subheading_cache: bool

@@ -66,9 +66,9 @@ class HeadingDetermineResponseDetail(BaseModel):
     """
     heading_code: str = Field(title="类目编码", description="类目编码,入参之一，直接返回")
     heading_title: str = Field(title="类目标题", description="类目标题，入参之一，直接返回")
-    reason: str = Field(title="选择此类目的原因", description="选择此类目的简单的依据说明", default=None)
+    reason: str = Field(title="选择此类目的原因", description="选择此类目的简单的依据说明")
     confidence_score: float = Field(title="选择此类目的置信度",
-                                    description="数值在0-10之间，商品所属类目概率越大数值越大",
+                                    description="数值在0-100之间，商品所属类目概率越大数值越大",
                                     default=0.0)
 
 
@@ -76,13 +76,8 @@ class HeadingDetermineResponse(BaseModel):
     """
     根据商品信息选择置信度最高的类目，以及候选类目
     """
-    main_heading: HeadingDetermineResponseDetail | None = Field(title="置信度最高的类目",
-                                                                description="置信度最高的一个类目", default=None)
-    alternative_headings: list[HeadingDetermineResponseDetail] | None = Field(title="其他备选类目",
-                                                                              description="返回至少3个至多5个备选heading",
-                                                                              default=None)
-    reason: str | None = Field(title="未正确分类的原因", description="所有给定heading列表都不满足时，给出不满足原因",
-                               default=None)
+    alternative_headings: list[HeadingDetermineResponseDetail] = Field(title="商品可能所属的heading列表",
+                                                                       description="返回至少10个heading，按照置信度从高到低排列")
 
 
 class SubheadingDetermineResponseDetail(BaseModel):

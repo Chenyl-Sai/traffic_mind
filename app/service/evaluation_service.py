@@ -134,12 +134,8 @@ async def get_determine_heading_accuracy_rate(evaluate_version: str):
                 hits = response["hits"]["hits"]
                 for hit in hits:
                     total_count += 1
-                    actual_heading = hit["_source"]["actual_heading"]
-                    main_heading = hit["_source"]["llm_response"]["main_heading"]
-                    alternative_headings = hit["_source"]["llm_response"]["alternative_headings"]
-                    all_headings = [main_heading] + (alternative_headings if alternative_headings else [])
-                    heading_codes = [heading["heading_code"] for heading in all_headings]
-                    if actual_heading in heading_codes:
+                    matches = hit["_source"]["matches"]
+                    if matches:
                         hit_count += 1
 
                 # 检查是否达到最后一页

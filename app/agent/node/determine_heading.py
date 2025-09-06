@@ -48,39 +48,21 @@ async def ask_llm_to_determine_heading(state: HtsClassifyAgentState):
 @safe_raise_exception_node(logger=logger)
 def process_llm_response(state: HtsClassifyAgentState):
     determine_heading_response = state.get("determine_heading_llm_response")
-    if determine_heading_response.main_heading:
+    # 过滤掉置信度低于10的heading
+    final_alternative_headings = [
+        heading.model_dump() for heading in determine_heading_response.alternative_headings
+        if heading.confidence_score > 10
+    ]
 
-        final_alternative_headings = []
-        if determine_heading_response.alternative_headings:
-            final_alternative_headings = [
-                heading.model_dump() for heading in determine_heading_response.alternative_headings
-                # if heading.confidence_score > 5
-            ]
-
+    if final_alternative_headings:
         return {
             "determine_heading_success": True,
-            "main_heading": determine_heading_response.main_heading.model_dump(),
             "alternative_headings": final_alternative_headings
         }
     else:
         return {
             "determine_heading_success": False
         }
-
-
-@safe_raise_exception_node(logger=logger, ignore_exception=True)
-async def save_layered_heading_cache(state: HtsClassifyAgentState):
-    """
-    保存heading层缓存
-    """
-    determine_heading_success = state.get("determine_heading_success")
-    if determine_heading_success:
-        await determine_heading_service.save_simil_cache(origin_item_name=state.get("item"),
-                                                         rewritten_item=state.get("rewritten_item"),
-                                                         chapter_codes=get_determined_chapter_codes(state),
-                                                         main_heading=state.get("main_heading"),
-                                                         alternative_headings=state.get("alternative_headings"))
-    return {}
 
 
 @safe_raise_exception_node(logger=logger, ignore_exception=True)
@@ -93,6 +75,20 @@ async def save_llm_confirm_heading_for_evaluation(state: HtsClassifyAgentState, 
                                                             heading_documents=state.get("heading_documents"),
                                                             llm_response=state.get("determine_heading_llm_response"),
                                                             actual_heading=config["configurable"].get("hscode", "")[:4])
+
+
+@safe_raise_exception_node(logger=logger, ignore_exception=True)
+async def save_layered_heading_cache(state: HtsClassifyAgentState):
+    """
+    保存heading层缓存
+    """
+    determine_heading_success = state.get("determine_heading_success")
+    if determine_heading_success:
+        await determine_heading_service.save_simil_cache(origin_item_name=state.get("item"),
+                                                         rewritten_item=state.get("rewritten_item"),
+                                                         chapter_codes=get_determined_chapter_codes(state),
+                                                         alternative_headings=state.get("alternative_headings"))
+    return {}
 
 
 def after_get_cache_edge(state: HtsClassifyAgentState):
